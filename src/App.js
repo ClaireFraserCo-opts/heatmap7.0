@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Heatmap from './components/Heatmap';
+import HeatmapComponent from './components/HeatmapComponent';
 
 function App() {
   const [fileList, setFileList] = useState([]);
@@ -33,7 +33,6 @@ function App() {
     loadFileContent(fileName);
   };
 
-  //Dropdown Menu
   return (
     <div className='App'>
       <header className='App-header'>
@@ -54,15 +53,10 @@ function App() {
           <h2>File Content</h2>
           <pre>{fileContent ? JSON.stringify(fileContent, null, 2) : 'Select a file to view its content'}</pre>
         </div>
-        {fileContent && <Heatmap data={fileContent} />}
+        {fileContent && <HeatmapComponent data={fileContent} />}
       </main>
     </div>
   );
 }
-
-
-
-
-
 
 export default App;
