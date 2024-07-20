@@ -1,6 +1,6 @@
 // src/utils/fetchData.js
 
-export async function loadData(fileListUrl) {
+export async function fetchData(fileListUrl) {
   try {
     const response = await fetch('/data/fileList.json');
     if (!response.ok) {
@@ -33,20 +33,3 @@ export async function loadData(fileListUrl) {
     throw error;
   }
 }
-
-
-    // process utterances
-    // const processedData = data.map(utterance => ({
-      // ...utterance,
-//       startTime: Math.round(utterance.startTime),
-//       endTime: Math.round(utterance.endTime),
-//       speaker: utterance.speaker,
-//       wordFrequency: utterance.wordFrequency,
-//     }));
-//     console.log("processed data:", processedData); // Debugging line
-//     return processedData;
-//   } catch (error) {
-//     console.error("Error loading data:", error);
-//     return [];
-//   }
-// };

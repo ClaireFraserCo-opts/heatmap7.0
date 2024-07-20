@@ -50,10 +50,8 @@ function App() {
           </select>
         </div>
         <div>
-          <h2>File Content</h2>
-          <pre>{fileContent ? JSON.stringify(fileContent, null, 2) : 'Select a file to view its content'}</pre>
+          {fileContent && <HeatmapComponent data={fileContent} />}
         </div>
-        {fileContent && <HeatmapComponent data={fileContent} />}
       </main>
     </div>
   );

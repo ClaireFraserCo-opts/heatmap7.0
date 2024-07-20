@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import h337 from 'heatmap.js';
+import { fetchData } from '../utils/fetchData';
+import { processSessionData } from '../utils/processData';
+import { calculatePercentile } from '../utils/heatmapUtils'; // Adjust import path if needed
+import Tooltip from './Tooltip';
+import './../styles/HeatmapComponent.css';
+
+const colorShades = {
+  speakerA: ['#d9ffd9', '#b2ffb2', '#8cff8c', '#66ff66', '#40ff40', '#19ff19', '#00ff00'],
+  speakerB: ['#ffe5e5', '#ffc7c8', '#e69293', '#e67c7e', '#e66163', '#e64548', '#e6292d'],
+  silence: '#808080',
+  overlap: '#ff0000'
+};
 
 const HeatmapComponent = ({ data }) => {
-  const [heatmapGrid, setHeatmapGrid] = useState([]);
-  const [containerSize, setContainerSize] = useState({ width: 380, height: 960 });
+  const [tooltip, setTooltip] = useState({ visible: false, content: '' });
+  const [containerSize, setContainerSize] = useState({ width: window.innerWidth * 0.8, height: window.innerHeight * 0.8 });
 
   useEffect(() => {
     const updateSize = () => {
       setContainerSize({
-        width: window.innerWidth * 0.8, // Example: 80% of window width
-        height: window.innerHeight * 0.8, // Example: 80% of window height
+        width: window.innerWidth * 0.8,
+        height: window.innerHeight * 0.8,
       });
     };
 
@@ -21,77 +32,69 @@ const HeatmapComponent = ({ data }) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!data || !data.utterances) return;
+  const getColorForUtterance = (utterance) => {
+    if (!utterance) return colorShades.silence;
+
+    const percentile = calculatePercentile(utterance.wordFrequency, data.utterances);
+    const shades = utterance.speaker === 'A' ? colorShades.speakerA : colorShades.speakerB;
+
+    if (utterance.isOverlap) return colorShades.overlap;
+    if (utterance.wordFrequency === 0) return colorShades.silence;
+
+    // Return color based on percentile (0 to 100 scale)
+    const index = Math.floor((percentile / 100) * (shades.length - 1));
+    return shades[index];
+  };
+
+  const processGridData = () => {
+    if (!data || !data.utterances) return [];
 
     const { width, height } = containerSize;
 
-    // Use Phi algorithm to calculate cell size
-    const phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
-    const cellSizeX = width / (Math.floor(width / (height / phi)));
-    const cellSizeY = height / (Math.floor(height / (width / phi)));
-    const cellSize = Math.min(cellSizeX, cellSizeY);
-    const cellRadius = Math.floor(cellSize / 2);
-
+    // Calculate cell size and number of cells
+    const cellSize = 12; // Fixed cell size for better visualization
     const numCellsX = Math.floor(width / cellSize);
     const numCellsY = Math.floor(height / cellSize);
-    const totalCells = numCellsX * numCellsY;
 
-    const initialGrid = new Array(totalCells).fill().map(() => ({
-      speaker: null,
-      wordFrequency: 0,
-      percentile: 0,
-      color: '#fff',
-    }));
-
-    const processedGrid = initialGrid.map((cell, index) => {
+    const processedGrid = new Array(numCellsX * numCellsY).fill().map((_, index) => {
       const utterance = data.utterances[index % data.utterances.length];
       return {
-        speaker: utterance.speaker || null,
-        wordFrequency: utterance.wordFrequency || 0,
-        percentile: calculatePercentile(utterance.wordFrequency, data.utterances),
-        color: getColor(utterance.wordFrequency),
+        ...utterance,
+        color: getColorForUtterance(utterance),
       };
     });
 
-    setHeatmapGrid(processedGrid);
-
     const heatmapData = processedGrid.map((cell, index) => ({
-      x: (index % numCellsX) * cellSize + cellRadius,
-      y: Math.floor(index / numCellsX) * cellSize + cellRadius,
+      x: (index % numCellsX) * cellSize,
+      y: Math.floor(index / numCellsX) * cellSize,
+      color: cell.color,
       value: cell.wordFrequency,
     }));
 
-    const heatmapInstance = h337.create({
-      container: document.getElementById('heatmapContainer'),
-      radius: cellRadius,
-    });
-
-    heatmapInstance.setData({
-      max: Math.max(...processedGrid.map(cell => cell.wordFrequency)),
-      data: heatmapData,
-    });
-  }, [data, containerSize]);
-
-  const calculatePercentile = (value, utterances) => {
-    const sorted = utterances.map(u => u.wordFrequency).sort((a, b) => a - b);
-    const rank = sorted.indexOf(value) + 1;
-    return (rank / sorted.length) * 100;
+    return { heatmapData, cellSize };
   };
 
-  const getColor = (wordFrequency) => {
-    if (wordFrequency > 80) return '#ff0000';
-    if (wordFrequency > 50) return '#ff9900';
-    return '#00ff00';
-  };
+  const { heatmapData, cellSize } = processGridData() || {};
 
   return (
-    <div>
-      <div id="heatmapContainer" style={{ width: '100%', height: '100%' }}></div>
-      <div>
-        <h2>Heatmap Grid Debug</h2>
-        <pre>{JSON.stringify(heatmapGrid, null, 2)}</pre>
-      </div>
+    <div style={{ position: 'relative', width: containerSize.width, height: containerSize.height }}>
+      <svg width={containerSize.width} height={containerSize.height}>
+        {heatmapData && heatmapData.map((cell, index) => (
+          <rect
+            key={index}
+            x={cell.x}
+            y={cell.y}
+            width={cellSize}
+            height={cellSize}
+            fill={cell.color}
+            stroke={cell.color === colorShades.overlap ? 'black' : 'none'}
+            strokeWidth={cell.color === colorShades.overlap ? 1 : 0}
+            onMouseOver={() => setTooltip({ visible: true, content: `Speaker: ${cell.speaker}, Frequency: ${cell.value}` })}
+            onMouseOut={() => setTooltip({ visible: false, content: '' })}
+          />
+        ))}
+      </svg>
+      <Tooltip content={tooltip.content} visible={tooltip.visible} />
     </div>
   );
 };

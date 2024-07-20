@@ -1,0 +1,16 @@
+#heatmapContainer {
+    position: relative;
+  }
+  
+  .tooltip {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    pointer-events: none;
+    display: none;
+  }
+  .tooltip.visible {
+    display: block;
+  }
+  
