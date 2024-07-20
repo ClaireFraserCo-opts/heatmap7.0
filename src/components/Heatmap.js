@@ -1,25 +1,62 @@
 // src/components/Heatmap.js
-import React, { useEffect, useState } from 'react';
-import { loadData } from '../utils/fetchData';
+import React, { useEffect } from 'react';
+import h337 from 'heatmap.js';
 
-const Heatmap = () => {
-  const [data, setData] = useState([]);
+const Heatmap = ({ data }) => {
+    useEffect(() => {
+      if (!data || !data.utterances) return;
+  
+      const generateHeatmapData = (utterances) => {
+        const heatmapData = utterances.map((utterance, index) => ({
+          x: index * 10,  // Example x coordinate
+          y: utterance.density * 10,  // Example y coordinate based on density
+          value: utterance.score // Heatmap intensity based on score
+        }));
+    
+        return {
+          max: Math.max(...utterances.map(u => u.score)),
+          data: heatmapData
+        };
+      };
+  
+      const heatmapData = generateHeatmapData(data.utterances);
+  
+      const heatmapInstance = h337.create({
+        container: document.querySelector('#heatmapContainer'),
+        radius: 20
+      });
+  
+      heatmapInstance.setData(heatmapData);
+    }, [data]);
+  
+    return <div id="heatmapContainer" style={{ width: '600px', height: '400px' }}></div>;
+  };
+// 1st
+// const Heatmap = ({ utterances }) => {
+//   useEffect(() => {
+//     const generateHeatmapData = (utterances) => {
+//       const heatmapData = utterances.map((utterance, index) => ({
+//         x: index * 10, // Example x coordinate
+//         y: utterance.density * 10, // Example y coordinate based on density
+//         value: utterance.score // Heatmap intensity based on score
+//       }));
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const loadedData = await loadData('/data/fileList.json');
-      setData(loadedData);
-    };
+//       return {
+//         max: Math.max(...utterances.map(u => u.score)),
+//         data: heatmapData
+//       };
+//     };
 
-    fetchData();
-  }, []);
+//     const heatmapInstance = h337.create({
+//       container: document.getElementById('heatmapContainer'),
+//       radius: 20
+//     });
 
-  return (
-    <div>
-      <h1>Heatmap</h1>
-      {/* Render heatmap here */}
-    </div>
-  );
-};
+//     const heatmapData = generateHeatmapData(utterances);
+//     heatmapInstance.setData(heatmapData);
+//   }, [utterances]);
+
+//   return <div id="heatmapContainer" style={{ width: '600px', height: '400px' }}></div>;
+// };
 
 export default Heatmap;
