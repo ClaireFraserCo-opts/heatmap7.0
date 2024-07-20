@@ -1,16 +1,77 @@
-#heatmapContainer {
-    position: relative;
+/* HeatmapComponent.css */
+body {
+    margin-top: 50px;
+    background: rgb(236, 221, 221);
+    
   }
   
-  .tooltip {
-    position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    pointer-events: none;
-    display: none;
+  h2 {
+    color: steelblue;
+    padding-top: 8px;
   }
-  .tooltip.visible {
-    display: block;
+  
+  h5 {
+    font-weight: bold;
+  }
+  
+  p {
+    padding: 0px 10px;
+  }
+  
+  .centered {
+    margin: 0px auto;
+    text-align: center;
+  }
+  
+  .chart {
+    background: white;
+    width: 900px;
+    height: 620px;
+    box-shadow: 0px 0px 20px #000;
+  }
+  
+  .graph {
+    text-align: left;
+  }
+  
+  .graph rect {
+    fill: steelblue; /* Default fill color */
+    rx: 5px;         /* Horizontal radius for rounded corners */
+    ry: 5px;         /* Vertical radius for rounded corners */
+  }
+  
+  .graph rect:hover {
+    fill-opacity: 0.8; /* Opacity on hover */
+  }
+  
+  .graph rect.highlight {
+    stroke: black; /* Border color */
+    stroke-width: 1px; /* Border thickness */
+  }
+  
+  
+  .axis text {
+    font: 12px sans-serif;
+  }
+  
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+  
+  div.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 5px;
+    width: 150px;
+    height: 55px;
+    font: 12px sans-serif;
+    background: black;
+    color: white;
+    border: 0px;
+    border-radius: 4px;
+    pointer-events: none;
   }
   

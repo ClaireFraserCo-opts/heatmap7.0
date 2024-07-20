@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { fetchData } from '../utils/fetchData';
-import { processSessionData } from '../utils/processData';
-import { calculatePercentile } from '../utils/heatmapUtils'; // Adjust import path if needed
+import { calculatePercentile } from '../utils/heatmapUtils'; // Ensure this function is correct
 import Tooltip from './Tooltip';
 import './../styles/HeatmapComponent.css';
+import Grid from './Grid';
 
 const colorShades = {
   speakerA: ['#d9ffd9', '#b2ffb2', '#8cff8c', '#66ff66', '#40ff40', '#19ff19', '#00ff00'],
@@ -13,8 +12,14 @@ const colorShades = {
 };
 
 const HeatmapComponent = ({ data }) => {
-  const [tooltip, setTooltip] = useState({ visible: false, content: '' });
+  const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: window.innerWidth * 0.8, height: window.innerHeight * 0.8 });
+
+  // Define cell dimensions
+  const cellWidth = 20; // Fixed width
+  const cellHeight = Math.round(cellWidth * 1.618); // Calculate height
+  // cellHeight ≈ 32
+  
 
   useEffect(() => {
     const updateSize = () => {
@@ -51,11 +56,11 @@ const HeatmapComponent = ({ data }) => {
 
     const { width, height } = containerSize;
 
-    // Calculate cell size and number of cells
-    const cellSize = 12; // Fixed cell size for better visualization
-    const numCellsX = Math.floor(width / cellSize);
-    const numCellsY = Math.floor(height / cellSize);
+    // Define the number of cells
+    const numCellsX = Math.floor(width / cellWidth);
+    const numCellsY = Math.floor(height / cellHeight);
 
+    // Map data to grid cells
     const processedGrid = new Array(numCellsX * numCellsY).fill().map((_, index) => {
       const utterance = data.utterances[index % data.utterances.length];
       return {
@@ -64,37 +69,34 @@ const HeatmapComponent = ({ data }) => {
       };
     });
 
+    // Map processed grid to heatmap data
     const heatmapData = processedGrid.map((cell, index) => ({
-      x: (index % numCellsX) * cellSize,
-      y: Math.floor(index / numCellsX) * cellSize,
+      x: (index % numCellsX) * cellWidth + cellWidth / 2,
+      y: Math.floor(index / numCellsX) * cellHeight + cellHeight / 2,
       color: cell.color,
       value: cell.wordFrequency,
+      speaker: cell.speaker,
     }));
 
-    return { heatmapData, cellSize };
+    return { heatmapData };
   };
 
-  const { heatmapData, cellSize } = processGridData() || {};
+  const { heatmapData } = processGridData() || {};
 
   return (
     <div style={{ position: 'relative', width: containerSize.width, height: containerSize.height }}>
-      <svg width={containerSize.width} height={containerSize.height}>
-        {heatmapData && heatmapData.map((cell, index) => (
-          <rect
-            key={index}
-            x={cell.x}
-            y={cell.y}
-            width={cellSize}
-            height={cellSize}
-            fill={cell.color}
-            stroke={cell.color === colorShades.overlap ? 'black' : 'none'}
-            strokeWidth={cell.color === colorShades.overlap ? 1 : 0}
-            onMouseOver={() => setTooltip({ visible: true, content: `Speaker: ${cell.speaker}, Frequency: ${cell.value}` })}
-            onMouseOut={() => setTooltip({ visible: false, content: '' })}
-          />
-        ))}
-      </svg>
-      <Tooltip content={tooltip.content} visible={tooltip.visible} />
+      <Grid
+        data={heatmapData}
+        cellWidth={cellWidth}
+        cellHeight={cellHeight}
+        setTooltip={setTooltip}
+      />
+      <Tooltip
+        content={tooltip.content}
+        visible={tooltip.visible}
+        x={tooltip.x}
+        y={tooltip.y}
+      />
     </div>
   );
 };

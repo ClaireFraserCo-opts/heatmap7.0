@@ -1,11 +1,13 @@
 import React from 'react';
 import './../styles/HeatmapComponent.css';
 
-const Tooltip = ({ content, visible }) => {
+const Tooltip = ({ content, visible, x, y }) => {
   return (
-    <div className={`tooltip ${visible ? 'visible' : ''}`}>
-      {content}
-    </div>
+    visible ? (
+      <div className="tooltip" style={{ left: x + 10, top: y + 10 }}>
+        {content}
+      </div>
+    ) : null
   );
 };
 

@@ -35,24 +35,13 @@ function App() {
 
   return (
     <div className='App'>
-      <header className='App-header'>
-        <h1>Heatmap Visualization</h1>
-      </header>
-      <main>
-        <div>
-          <select value={selectedFile} onChange={handleFileChange}>
-            <option value="" disabled>Select a file</option>
-            {fileList.map((fileName, index) => (
-              <option key={index} value={fileName}>
-                {fileName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          {fileContent && <HeatmapComponent data={fileContent} />}
-        </div>
-      </main>
+      <select onChange={handleFileChange} value={selectedFile}>
+        <option value="">Select a file</option>
+        {fileList.map(file => (
+          <option key={file} value={file}>{file}</option>
+        ))}
+      </select>
+      {fileContent && <HeatmapComponent data={fileContent} />}
     </div>
   );
 }

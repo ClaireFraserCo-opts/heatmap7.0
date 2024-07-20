@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^14.5.2",
     "axios": "^1.7.2",
     "d3": "^7.9.0",
+    "d3-hexbin": "^0.2.2",
     "fs": "^0.0.1-security",
     "heatmap.js": "^2.0.5",
     "lodash": "^4.17.21",
