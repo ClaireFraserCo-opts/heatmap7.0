@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { getColorForUtterance, getColorForWord } from '../utils/heatmapUtils';
+import { colorShades } from '../utils/colorShades'; // Ensure this path is correct
 import Tooltip from './Tooltip';
 import Grid from './Grid';
 import './../styles/HeatmapComponent.css';
 
-const colorShades = {
-  speakerA: ['#d9ffd9', '#b2ffb2', '#8cff8c', '#66ff66', '#40ff40', '#19ff19', '#00ff00'],
-  speakerB: ['#ffe5e5', '#ffc7c8', '#e69293', '#e67c7e', '#e66163', '#e64548', '#e6292d'],
-  silence: '#808080',
-  overlap: '#ff0000'
-};
 
 const HeatmapComponent = ({ data }) => {
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
@@ -72,6 +67,7 @@ const HeatmapComponent = ({ data }) => {
   };
   
   
+  
 
   const heatmapData = processGridData() || [];
 
@@ -97,12 +93,12 @@ HeatmapComponent.propTypes = {
   data: PropTypes.shape({
     utterances: PropTypes.arrayOf(PropTypes.shape({
       wordFrequency: PropTypes.number,
-      speaker: PropTypes.string,
+      speaker: PropTypes.string.isRequired,
       isOverlap: PropTypes.bool,
     })),
     words: PropTypes.arrayOf(PropTypes.shape({
       confidence: PropTypes.number,
-      speaker: PropTypes.string,
+      speaker: PropTypes.string.isRequired,
     }))
   }).isRequired,
 };

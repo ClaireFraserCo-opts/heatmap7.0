@@ -1,14 +1,14 @@
+/* src/styles/Tooltip.css */
 .tooltip {
-    position: absolute;
-    background-color: #333;
-    color: #fff;
-    padding: 5px;
-    border-radius: 3px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  
-  .tooltip.visible {
-    opacity: 1;
-  }
-  
+  background-color: #ffffff;
+  border: 1px solid #000000;
+  padding: 5px;
+  border-radius: 3px;
+  position: absolute;
+  pointer-events: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-content {
+  color: #000000;
+}

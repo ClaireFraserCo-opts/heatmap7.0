@@ -1,4 +1,67 @@
-/* HeatmapComponent.css */
+/* src/styles/HeatmapComponent.css */
+:root {
+  --color-speaker-a-1: #d9ffd9;
+  --color-speaker-a-2: #b2ffb2;
+  --color-speaker-a-3: #8cff8c;
+  --color-speaker-a-4: #66ff66;
+  --color-speaker-a-5: #40ff40;
+  --color-speaker-a-6: #19ff19;
+  --color-speaker-a-7: #00ff00;
+
+  --color-speaker-b-1: #ffe5e5;
+  --color-speaker-b-2: #ffc7c8;
+  --color-speaker-b-3: #e69293;
+  --color-speaker-b-4: #e67c7e;
+  --color-speaker-b-5: #e66163;
+  --color-speaker-b-6: #e64548;
+  --color-speaker-b-7: #e6292d;
+
+  --color-speaker-c-1: #e5e5ff;
+  --color-speaker-c-2: #c8c8ff;
+  --color-speaker-c-3: #9393e6;
+  --color-speaker-c-4: #7e7ee6;
+  --color-speaker-c-5: #6363e6;
+  --color-speaker-c-6: #4848e6;
+  --color-speaker-c-7: #2d2de6;
+
+  --color-speaker-d-1: #ffe5e5;
+  --color-speaker-d-2: #ffb2b2;
+  --color-speaker-d-3: #ff8c8c;
+  --color-speaker-d-4: #ff6666;
+  --color-speaker-d-5: #ff4040;
+  --color-speaker-d-6: #ff1919;
+  --color-speaker-d-7: #ff0000;
+
+  --color-silence: #808080;
+  --color-overlap: #ff0000;
+}
+
+/* src/styles/HeatmapComponent.css */
+.cell-speaker-a-1 { fill: var(--color-speaker-a-1); }
+.cell-speaker-a-2 { fill: var(--color-speaker-a-2); }
+/* Add more classes for other shades */
+
+.cell-silence { fill: var(--color-silence); }
+.cell-overlap { fill: var(--color-overlap); }
+
+
+.heatmap-cell {
+  fill: var(--color-silence); /* Default to silence color */
+  opacity: 0.6;
+  stroke: none;
+}
+
+.heatmap-cell.overlap {
+  stroke: black;
+  stroke-width: 1;
+}
+
+.tooltip {
+  background-color: #ffffff;
+  border: 1px solid #000000;
+  padding: 5px;
+  border-radius: 3px;
+}
 body {
     margin-top: 50px;
     background: rgb(236, 221, 221);
