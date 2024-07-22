@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { calculatePercentile } from '../utils/heatmapUtils'; // Ensure this function is correct
+import PropTypes from 'prop-types';
+import { getColorForUtterance, getColorForWord } from '../utils/heatmapUtils';
 import Tooltip from './Tooltip';
-import './../styles/HeatmapComponent.css';
 import Grid from './Grid';
+import './../styles/HeatmapComponent.css';
 
 const colorShades = {
   speakerA: ['#d9ffd9', '#b2ffb2', '#8cff8c', '#66ff66', '#40ff40', '#19ff19', '#00ff00'],
@@ -37,23 +38,10 @@ const HeatmapComponent = ({ data }) => {
     };
   }, []);
 
-  const getColorForUtterance = (utterance) => {
-    if (!utterance) return colorShades.silence;
-
-    const percentile = calculatePercentile(utterance.wordFrequency, data.utterances);
-    const shades = utterance.speaker === 'A' ? colorShades.speakerA : colorShades.speakerB;
-
-    if (utterance.isOverlap) return colorShades.overlap;
-    if (utterance.wordFrequency === 0) return colorShades.silence;
-
-    // Return color based on percentile (0 to 100 scale)
-    const index = Math.floor((percentile / 100) * (shades.length - 1));
-    return shades[index];
-  };
-
   const processGridData = () => {
-    if (!data || !data.utterances) return [];
-
+    if (!data || !data.utterances || !data.words) return [];
+  
+    const { utterances = [], words = [] } = data;
     const { width, height } = containerSize;
 
     // Define the number of cells
@@ -62,10 +50,12 @@ const HeatmapComponent = ({ data }) => {
 
     // Map data to grid cells
     const processedGrid = new Array(numCellsX * numCellsY).fill().map((_, index) => {
-      const utterance = data.utterances[index % data.utterances.length];
+      const utterance = utterances[index % utterances.length] || {};
+      const word = words[index % words.length] || {};
       return {
-        ...utterance,
-        color: getColorForUtterance(utterance),
+        utterance,
+        word,
+        color: utterance.wordFrequency !== undefined ? getColorForUtterance(utterance, data, colorShades) : getColorForWord(word, colorShades),
       };
     });
 
@@ -74,14 +64,16 @@ const HeatmapComponent = ({ data }) => {
       x: (index % numCellsX) * cellWidth + cellWidth / 2,
       y: Math.floor(index / numCellsX) * cellHeight + cellHeight / 2,
       color: cell.color,
-      value: cell.wordFrequency,
-      speaker: cell.speaker,
+      value: cell.utterance ? cell.utterance.wordFrequency || 0 : (cell.word ? cell.word.confidence || 0 : 0),
+      speaker: cell.utterance ? cell.utterance.speaker || '' : (cell.word ? cell.word.speaker || '' : ''),
     }));
-
-    return { heatmapData };
+  
+    return heatmapData;
   };
+  
+  
 
-  const { heatmapData } = processGridData() || {};
+  const heatmapData = processGridData() || [];
 
   return (
     <div style={{ position: 'relative', width: containerSize.width, height: containerSize.height }}>
@@ -99,6 +91,20 @@ const HeatmapComponent = ({ data }) => {
       />
     </div>
   );
+};
+
+HeatmapComponent.propTypes = {
+  data: PropTypes.shape({
+    utterances: PropTypes.arrayOf(PropTypes.shape({
+      wordFrequency: PropTypes.number,
+      speaker: PropTypes.string,
+      isOverlap: PropTypes.bool,
+    })),
+    words: PropTypes.arrayOf(PropTypes.shape({
+      confidence: PropTypes.number,
+      speaker: PropTypes.string,
+    }))
+  }).isRequired,
 };
 
 export default HeatmapComponent;

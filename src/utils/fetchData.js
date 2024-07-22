@@ -1,6 +1,5 @@
 // src/utils/fetchData.js
-
-export async function fetchData(fileListUrl) {
+export async function fetchData() {
   try {
     const response = await fetch('/data/fileList.json');
     if (!response.ok) {
