@@ -1,21 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { getColorForUtterance, getColorForWord } from '../utils/heatmapUtils';
-import { colorShades } from '../utils/colorShades'; // Ensure this path is correct
+import { processUtterances, calculateWordFrequencies, prepareHeatmapData } from '../utils/dataProcessing';
+import { processType1Data, processType2Data, mergeAndSortData } from '../utils/dataProcessing';
+import { initializeGrid } from '../utils/gridUtils';
+import { getColorForCell } from '../utils/colorShades';
+import { generateHeatmapData } from '../utils/heatmapUtils';
 import Tooltip from './Tooltip';
 import Grid from './Grid';
 import './../styles/HeatmapComponent.css';
 
-
-const HeatmapComponent = ({ data }) => {
+const HeatmapComponent = ({ data, type1Data, type2Data }) => {
+  const [heatmapData, setHeatmapData] = useState([]);
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: window.innerWidth * 0.8, height: window.innerHeight * 0.8 });
 
   // Define cell dimensions
-  const cellWidth = 20; // Fixed width
-  const cellHeight = Math.round(cellWidth * 1.618); // Calculate height
-  // cellHeight ≈ 32
-  
+  const cellWidth = 12;
+  const cellHeight = Math.round(cellWidth * 1.618);
+  const duration = 2405;
+
+  useEffect(() => {
+    // Process and merge data
+    const processedType1 = processType1Data(type1Data); // Ensure these functions are correctly imported
+    const processedType2 = processType2Data(type2Data);
+    const mergedData = mergeAndSortData(processedType1, processedType2);
+
+    // Generate heatmap data
+    setHeatmapData(generateHeatmapData(mergedData));
+  }, [type1Data, type2Data]);
+
+  useEffect(() => {
+    // Process data when the component mounts or data changes
+    const processData = async () => {
+      try {
+        console.log('Received data in HeatmapComponent:', data); // Log received data
+        const utterances = processUtterances(data);
+        console.log('Processed utterances:', utterances); // Debugging log
+        const wordFrequencies = calculateWordFrequencies(utterances);
+        console.log('Word frequencies:', wordFrequencies); // Debugging log
+        const heatmapData = prepareHeatmapData(utterances, wordFrequencies);
+        console.log('Heatmap data:', heatmapData); // Debugging log
+        const grid = initializeGrid(heatmapData, cellWidth, cellHeight, duration);
+        console.log('Initialized grid:', grid); // Debugging log
+        setHeatmapData(grid);
+      } catch (error) {
+        console.error('Error processing data:', error);
+      }
+    };
+
+    processData();
+  }, [data]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -26,7 +60,7 @@ const HeatmapComponent = ({ data }) => {
     };
 
     window.addEventListener('resize', updateSize);
-    updateSize(); // Initial call to set size
+    updateSize();
 
     return () => {
       window.removeEventListener('resize', updateSize);
@@ -34,47 +68,38 @@ const HeatmapComponent = ({ data }) => {
   }, []);
 
   const processGridData = () => {
-    if (!data || !data.utterances || !data.words) return [];
-  
-    const { utterances = [], words = [] } = data;
-    const { width, height } = containerSize;
+    if (!heatmapData || !heatmapData.length) return [];
 
-    // Define the number of cells
+    const { width, height } = containerSize;
     const numCellsX = Math.floor(width / cellWidth);
     const numCellsY = Math.floor(height / cellHeight);
 
-    // Map data to grid cells
     const processedGrid = new Array(numCellsX * numCellsY).fill().map((_, index) => {
-      const utterance = utterances[index % utterances.length] || {};
-      const word = words[index % words.length] || {};
+      const item = heatmapData[index % heatmapData.length] || {};
       return {
-        utterance,
-        word,
-        color: utterance.wordFrequency !== undefined ? getColorForUtterance(utterance, data, colorShades) : getColorForWord(word, colorShades),
+        ...item,
+        color: item.utterance
+          ? getColorForCell(item.utterance) // Updated to use getColorForCell
+          : '#FFFFFF', // Default color for empty cells
       };
     });
 
-    // Map processed grid to heatmap data
-    const heatmapData = processedGrid.map((cell, index) => ({
+    return processedGrid.map((cell, index) => ({
       x: (index % numCellsX) * cellWidth + cellWidth / 2,
       y: Math.floor(index / numCellsX) * cellHeight + cellHeight / 2,
       color: cell.color,
-      value: cell.utterance ? cell.utterance.wordFrequency || 0 : (cell.word ? cell.word.confidence || 0 : 0),
-      speaker: cell.utterance ? cell.utterance.speaker || '' : (cell.word ? cell.word.speaker || '' : ''),
+      value: cell.utterance ? cell.utterance.wordFrequency || 0 : 0,
+      speaker: cell.utterance ? cell.utterance.speaker || '' : '',
     }));
-  
-    return heatmapData;
   };
-  
-  
-  
 
-  const heatmapData = processGridData() || [];
+  const processedData = processGridData();
+  console.log('Processed grid data:', processedData); // Debugging log
 
   return (
     <div style={{ position: 'relative', width: containerSize.width, height: containerSize.height }}>
       <Grid
-        data={heatmapData}
+        data={processedData}
         cellWidth={cellWidth}
         cellHeight={cellHeight}
         setTooltip={setTooltip}
@@ -90,17 +115,9 @@ const HeatmapComponent = ({ data }) => {
 };
 
 HeatmapComponent.propTypes = {
-  data: PropTypes.shape({
-    utterances: PropTypes.arrayOf(PropTypes.shape({
-      wordFrequency: PropTypes.number,
-      speaker: PropTypes.string.isRequired,
-      isOverlap: PropTypes.bool,
-    })),
-    words: PropTypes.arrayOf(PropTypes.shape({
-      confidence: PropTypes.number,
-      speaker: PropTypes.string.isRequired,
-    }))
-  }).isRequired,
+  data: PropTypes.array.isRequired,
+  type1Data: PropTypes.array, // Assuming these are arrays; adjust if different
+  type2Data: PropTypes.array, // Assuming these are arrays; adjust if different
 };
 
 export default HeatmapComponent;

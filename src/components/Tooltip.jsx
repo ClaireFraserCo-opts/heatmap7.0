@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './../styles/Tooltip.css';
 
-const Tooltip = ({ content, visible, x, y }) => {
+const Tooltip = ({content, visible, x, y }) => {
   return (
     visible && (
       <div className="tooltip" style={{ left: x, top: y }}>

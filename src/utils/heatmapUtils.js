@@ -2,6 +2,12 @@
 
 import { colorShades } from './colorShades'; // Adjust the path as necessary
 
+/**
+ * Calculates the percentile rank of a value within a dataset.
+ * @param {number} value - The value to find the percentile for.
+ * @param {Array} data - The dataset to compare against.
+ * @returns {number} - The percentile rank of the value (0 to 100).
+ */
 export const calculatePercentile = (value = 0, data = []) => {
   if (!Array.isArray(data) || data.length === 0) return 0;
 
@@ -19,30 +25,35 @@ export const calculatePercentile = (value = 0, data = []) => {
   return (rank / sorted.length) * 100;
 };
 
+/**
+ * Gets the color for an utterance based on its properties and dataset.
+ * @param {Object} utterance - The utterance data object.
+ * @param {Object} data - The dataset containing all utterances.
+ * @returns {string} - The color for the utterance.
+ */
 export const getColorForUtterance = (utterance = {}, data = {}) => {
-  if (!utterance) return colorShades.silence;
-  if (utterance.isOverlap) return colorShades.overlap;
-  if (utterance.wordFrequency === undefined || utterance.wordFrequency === 0) return colorShades.silence;
+  if (!utterance) return colorShades.silenceColor;
+  if (utterance.isOverlap) return colorShades.overlapColor;
+  if (utterance.wordFrequency === undefined || utterance.wordFrequency === 0) return colorShades.silenceColor;
   
   const percentile = calculatePercentile(utterance.wordFrequency, data.utterances || []);
   let shades;
 
-  // Determine color shades based on speaker type
   switch (utterance.speaker) {
     case 'A':
-      shades = colorShades.speakerA;
+      shades = colorShades.speakerColors.A.range();
       break;
     case 'B':
-      shades = colorShades.speakerB;
+      shades = colorShades.speakerColors.B.range();
       break;
     case 'C':
-      shades = colorShades.speakerC;
+      shades = colorShades.speakerColors.C.range();
       break;
     case 'D':
-      shades = colorShades.speakerD;
+      shades = colorShades.speakerColors.D.range();
       break;
     default:
-      shades = [colorShades.silence]; // Default to silence if speaker type is unknown
+      shades = [colorShades.silenceColor]; // Default to silence if speaker type is unknown
   }
 
   const index = Math.floor((percentile / 100) * (shades.length - 1));
@@ -50,36 +61,55 @@ export const getColorForUtterance = (utterance = {}, data = {}) => {
   return shades[index];
 };
 
+/**
+ * Gets the color for a word based on its properties.
+ * @param {Object} word - The word data object.
+ * @returns {string} - The color for the word.
+ */
 export const getColorForWord = (word = {}) => {
-  if (!word) return colorShades.silence;
+  if (!word) return colorShades.silenceColor;
 
   let shades;
 
-  // Determine color shades based on speaker type
   switch (word.speaker) {
     case 'A':
-      shades = colorShades.speakerA;
+      shades = colorShades.speakerColors.A.range();
       break;
     case 'B':
-      shades = colorShades.speakerB;
+      shades = colorShades.speakerColors.B.range();
       break;
     case 'C':
-      shades = colorShades.speakerC;
+      shades = colorShades.speakerColors.C.range();
       break;
     case 'D':
-      shades = colorShades.speakerD;
+      shades = colorShades.speakerColors.D.range();
       break;
     default:
-      shades = [colorShades.silence]; // Default to silence if speaker type is unknown
+      shades = [colorShades.silenceColor]; // Default to silence if speaker type is unknown
   }
   
-  if (word.isOverlap) return colorShades.overlap;
-  if (word.confidence === undefined || word.confidence < 0.5) return colorShades.silence;
+  if (word.isOverlap) return colorShades.overlapColor;
+  if (word.confidence === undefined || word.confidence < 0.5) return colorShades.silenceColor;
 
   const confidenceIndex = Math.floor(word.confidence * (shades.length - 1));
   console.log(`Word Color: ${shades[confidenceIndex]}`); // Debugging
   return shades[confidenceIndex];
 };
+
+/**
+ * Generates heatmap data from processed JSON data.
+ * @param {Array} data - The processed data suitable for heatmap.
+ * @returns {Array} - Data formatted for heatmap visualization.
+ */
+export function generateHeatmapData(data) {
+  return data.map(item => ({
+      x: item.start, // Adjust based on your heatmap X-axis
+      y: item.confidence, // Adjust based on your heatmap Y-axis
+      label: item.text
+  }));
+}
+
+
 
 // export const getColorForSpeaker = (speaker) => {
 //   switch (speaker) {

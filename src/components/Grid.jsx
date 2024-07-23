@@ -1,10 +1,7 @@
-// ../components/Grid.jsx
-
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from 'd3';
-import { calculatePercentile } from '../utils/heatmapUtils';
-import { colorShades } from '../utils/colorShades'; // Adjust the path as necessary
+import { getColorForCell } from '../utils/colorShades'; // Make sure this function exists and is correct
 
 const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
   useEffect(() => {
@@ -17,26 +14,38 @@ const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
     svg.selectAll('rect')
       .data(data)
       .enter().append('rect')
-      .attr('x', d => d.x - cellWidth / 2)  // Center rectangles horizontally
-      .attr('y', d => d.y - cellHeight / 2) // Center rectangles vertically
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
       .attr('width', cellWidth)
       .attr('height', cellHeight)
-      .attr('rx', 5)  // Rounded corners
-      .attr('ry', 5)  // Rounded corners
-      .style('fill', d => d.color || colorShades.silence)
+      .attr('rx', 5)
+      .attr('ry', 5)
+      .style('fill', d => getColorForCell(d)) // Apply color based on cell data
       .style('opacity', 0.6)
-      .style('stroke', d => d.color === colorShades.overlap ? 'black' : 'none')
-      .style('stroke-width', d => d.color === colorShades.overlap ? 1 : 0)
+      .style('stroke', d => d.isOverlap ? 'black' : 'none')
+      .style('stroke-width', d => d.isOverlap ? 1 : 0)
       .on('mouseover', (event, d) => {
         setTooltip({
           visible: true,
-          content: `Speaker: ${d.speaker || 'N/A'}, Frequency: ${d.value}, Percentile: ${calculatePercentile(d.value, data.map(item => item.value))}`,
+          content: `Speaker: ${d.speaker || 'N/A'}, Confidence: ${d.confidence || 'N/A'}, Sentiment: ${d.sentiment || 'N/A'}, Percentile: ${d.percentile || 'N/A'}`,
           x: event.pageX,
           y: event.pageY
         });
       })
       .on('mouseout', () => {
         setTooltip({ visible: false, content: '', x: 0, y: 0 });
+      })
+      .on('click', (event, d) => {
+        if (d.wordFrequency === 'X') {
+          // Handle single click to open a summary widget
+          // Your custom logic here
+        }
+      })
+      .on('dblclick', (event, d) => {
+        if (d.wordFrequency === 'X') {
+          // Handle double click to send a message to the container
+          // Your custom logic here
+        }
       });
   }, [data, cellWidth, cellHeight, setTooltip]);
 
@@ -51,11 +60,12 @@ Grid.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({
     x: PropTypes.number.isRequired,
     y: PropTypes.number.isRequired,
-    color: PropTypes.string, // Remove `isRequired` if color is not always present
-    value: PropTypes.number,
+    confidence: PropTypes.number,
+    sentiment: PropTypes.string,
+    percentile: PropTypes.number,
     speaker: PropTypes.string.isRequired,
-    index: PropTypes.number, // Optional if not used
-    isOverlap: PropTypes.bool
+    isOverlap: PropTypes.bool,
+    wordFrequency: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Added to handle wordFrequency type
   })).isRequired,
   cellWidth: PropTypes.number.isRequired,
   cellHeight: PropTypes.number.isRequired,
