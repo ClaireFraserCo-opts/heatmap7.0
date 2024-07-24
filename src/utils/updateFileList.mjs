@@ -6,9 +6,7 @@ import _ from 'lodash';  // For convenience with data manipulation
 // Define the file path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Adjust the path to point to the correct directory
-const dataDir = path.join(__dirname, '..', '..', 'public', 'data'); // Pointing to the 'data' directory under 'public'
+const dataDir = path.join(__dirname, '..', '..', 'public', 'data');
 const filePath = path.join(dataDir, 'fileList.json');
 
 // Define a refined list of stop words for therapy session analysis
@@ -64,113 +62,119 @@ const stopWords = new Set([
    'like', 'thing', 'things', 'people', 'person', 'time', 'way', 'fact', 'case', 'point', 'moment', 'situation', 'idea', 'part', 'question', 'answer', 'problem', 'solution', 'topic', 'issue', 'discussion', 'conversation', 'speech', 'talk', 'statement', 'utterance', 'um', 'uh', 'something', 'much', 'sit', 'go', 'want', 'see', 'being'
 ]);
 
-// Function to determine the file type based on the filename
-const determineFileType = (fileName) => {
-  return fileName.endsWith('_tx.json') ? 'tx' : 'pretty';
+// Function to normalize words for consistent comparison
+const normalizeWord = (word) =>
+  word.toLowerCase()
+      .replace(/^[.,/#!$%^*;:{}=\-_`~()]+|[.,/#!$%^*;:{}=\-_`~()]+$/g, '')
+      .replace(/'s$/g, '');
+
+// Determine the type of file based on its name
+const determineFileType = (fileName) => fileName.endsWith('_tx.json') ? 'tx' : 'pretty';
+
+// Calculate silence and session durations from utterances
+const calculateDurations = (utterances) => {
+  if (utterances.length === 0) return { totalSilence: 0, totalSessionDuration: 0, sessionStartTime: null, sessionEndTime: null };
+
+  // Sort utterances by their start time
+  utterances.sort((a, b) => new Date(`1970-01-01T${a.start_time}Z`) - new Date(`1970-01-01T${b.start_time}Z`));
+
+  let totalSilence = 0;
+  const sessionStartTime = utterances[0].start_time;
+  const sessionEndTime = utterances[utterances.length - 1].end_time;
+
+  // Calculate silence between consecutive utterances
+  for (let i = 0; i < utterances.length - 1; i++) {
+    const currentEndTime = utterances[i].end_time;
+    const nextStartTime = utterances[i + 1].start_time;
+    const silence = timeDifferenceInSeconds(currentEndTime, nextStartTime);
+
+    if (silence > 0) totalSilence += silence;
+  }
+
+  // Calculate total session duration
+  const totalSessionDuration = timeDifferenceInSeconds(sessionStartTime, sessionEndTime);
+  return { totalSilence, totalSessionDuration, sessionStartTime, sessionEndTime };
 };
 
-// Normalize words: convert to lowercase and remove leading/trailing punctuation
-const normalizeWord = (word) => 
-  word.toLowerCase()
-      .replace(/^[.,/#!$%^*;:{}=\-_`~()]+|[.,/#!$%^*;:{}=\-_`~()]+$/g, '') // Remove leading/trailing punctuation
-      .replace(/'s$/g, ''); // Remove possessive suffixes
+// Calculate the difference in seconds between two times
+const timeDifferenceInSeconds = (startTime, endTime) => {
+  const start = new Date(`1970-01-01T${startTime}Z`);
+  const end = new Date(`1970-01-01T${endTime}Z`);
+  return (end - start) / 1000;
+};
 
-// Function to extract top 25 most frequent words
+// Extract top words by speaker from the content
 const extractTopWordsBySpeaker = (content) => {
   const words = content.words || [];
-  console.log('Words:', words); // Debugging: Print all words to ensure they are loaded
-
-  // Group words by speaker
   const speakerWords = _.groupBy(words, 'speaker');
 
   const speakerTopWords = {};
+  const speakerMostUsedWord = {};
+
   for (const [speaker, wordList] of Object.entries(speakerWords)) {
     // Normalize and filter out stop words
     const filteredWords = wordList
       .map(word => normalizeWord(word.text))
-      .filter(word => !stopWords.has(word) && word.length > 0); // Ensure non-empty words
+      .filter(word => !stopWords.has(word) && word.length > 0);
 
-    console.log(`Filtered Words for ${speaker}:`, filteredWords); // Debugging: Print filtered words
-
-    // Count word frequencies
+    // Count word frequencies and filter out infrequent words
     const wordCounts = _.countBy(filteredWords);
-
-    // Filter out words that occur fewer than 3 times
     const filteredWordCounts = _.pickBy(wordCounts, count => count > 2);
-
-    // Sort words by frequency
     const sortedWords = _.sortBy(Object.keys(filteredWordCounts), word => -filteredWordCounts[word]);
-    const topWords = sortedWords.slice(0, 25); // Adjust the number of top words if needed
+    const topWords = sortedWords.slice(0, 25);
 
-    console.log(`Top Words for ${speaker}:`, topWords); // Debugging: Print top words to verify extraction
+    // Determine the most used word
+    const mostUsedWord = sortedWords.length > 0 ? sortedWords[0] : null;
 
     speakerTopWords[speaker] = topWords;
+    speakerMostUsedWord[speaker] = mostUsedWord;
   }
 
-  return speakerTopWords;
+  return { speakerTopWords, speakerMostUsedWord };
 };
 
-// Generate heatmap data (to be defined if needed)
-const generateHeatmapData = (utterances, speakerTopWords) => {
+// Generate heatmap data based on utterances and top words
+const generateHeatmapData = (utterances, speakerTopWords, speakerMostUsedWord) => {
   const heatmapData = [];
-
-  // Initialize wordFrequencies and frequencyTable
   const wordFrequencies = {};
-  const frequencyTable = {}; // You might need to populate this based on your data or analysis
 
-  // Compute word frequencies from utterances
+  // Calculate word frequencies for all utterances
   utterances.forEach(utterance => {
     const words = utterance.text.split(/\s+/).map(word => normalizeWord(word)).filter(word => !stopWords.has(word) && word.length > 0);
     const counts = _.countBy(words);
+
     Object.entries(counts).forEach(([word, count]) => {
-      if (wordFrequencies[word]) {
-        wordFrequencies[word] += count;
-      } else {
-        wordFrequencies[word] = count;
-      }
+      wordFrequencies[word] = (wordFrequencies[word] || 0) + count;
     });
   });
 
-  // Compute frequencyTable if needed
-  // You need to define or calculate this table based on your requirements
-
+  // Create heatmap data for each utterance
   utterances.forEach(utterance => {
     const startTime = utterance.start_time;
     const endTime = utterance.end_time;
     const speaker = utterance.speaker;
     const text = utterance.text;
-    const duration = endTime - startTime;
+    const duration = timeDifferenceInSeconds(startTime, endTime);
 
-    // Calculate the frequency of words in the current utterance
     const words = text.split(/\s+/).map(word => normalizeWord(word)).filter(word => !stopWords.has(word) && word.length > 0);
     const wordCounts = _.countBy(words);
 
-    // Calculate word density if needed
-    const density = calculateDensity(wordFrequencies, frequencyTable);
+    // Define color intensity for top words
+    const colorIntensity = word => speakerTopWords[speaker]?.find(w => w === word) ? 1 : 0;
 
-    // Determine color intensity and highlight the most frequent word
-    const speakerWords = speakerTopWords[speaker] || [];
-    const colorIntensity = word => speakerWords.find(w => w.word === word)?.count || 0;
-
-    // Generate heatmap cells for the utterance
-    const cells = []
-    words.forEach(word => {
-      if (colorIntensity(word) > 0) {
-        cells.push({
-          word,
-          count: wordCounts[word],
-          color: `rgba(0, 0, 255, ${colorIntensity(word) / 10})`, // Example color gradient
-          isTopWord: word === speakerWords[0]?.word // Highlight the most frequent word
-        });
-      }
-    });
+    const cells = words.map(word => ({
+      word,
+      count: wordCounts[word],
+      color: `rgba(0, 0, 255, ${colorIntensity(word)})`,
+      isTopWord: speakerTopWords[speaker]?.includes(word),
+      markX: word === speakerMostUsedWord[speaker] ? 'X' : ' ' // Add 'X' if the word is the most used word
+    }));
 
     heatmapData.push({
-      startTime: utterance.start_time,
-      endTime: utterance.end_time,
-      speaker: utterance.speaker,
+      startTime,
+      endTime,
+      speaker,
       duration,
-      density, // Include density if useful
       cells
     });
   });
@@ -178,15 +182,33 @@ const generateHeatmapData = (utterances, speakerTopWords) => {
   return heatmapData;
 };
 
+// Function to create the file index
+const createFileIndex = () => {
+  const index = [];
 
-// Example function to calculate word density
-const calculateDensity = (wordFrequencies, frequencyTable) => {
-  const totalWords = Object.values(wordFrequencies).reduce((sum, count) => sum + count, 0);
-  const score = Object.keys(wordFrequencies).reduce((sum, word) => sum + (frequencyTable[word] || 0) * wordFrequencies[word], 0);
-  return totalWords > 0 ? score / totalWords : 0;
+  // Read the directory contents
+  const files = fs.readdirSync(dataDir);
+  files.forEach(file => {
+      if (file.endsWith('.json') && file !== 'fileIndex.json') {
+          const filePath = path.join(dataDir, file);
+          const stats = fs.statSync(filePath);
+
+          index.push({
+              fileName: file,
+              filePath: filePath,
+              lastModified: stats.mtime.toISOString(),
+              size: stats.size
+          });
+      }
+  });
+
+  // Write the index to a file
+  const indexPath = path.join(dataDir, 'fileIndex.json');
+  fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
+  console.log('File index created successfully.');
 };
 
-// Function to update the file list
+// Main function to update fileList.json with metadata and derived data
 const updateFileList = () => {
   try {
     // Check if the data directory exists
@@ -194,18 +216,15 @@ const updateFileList = () => {
       throw new Error(`Directory not found: ${dataDir}`);
     }
 
+    // Read all JSON files in the directory, excluding fileList.json
     const files = fs.readdirSync(dataDir);
     const jsonFiles = files.filter(file => file.endsWith('.json') && file !== 'fileList.json');
 
-    // Read each JSON file and collect necessary information
+    // Process each file and generate metadata
     const fileList = jsonFiles.map(file => {
       const filePath = path.join(dataDir, file);
       const stats = fs.statSync(filePath);
-
-      // Parse the JSON content
       const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-      // Determine the file type based on filename
       const fileType = determineFileType(file);
 
       let fileMetadata = {
@@ -218,31 +237,18 @@ const updateFileList = () => {
 
       let contentMetadata = {};
       let speakerTopWords = {};
+      let speakerMostUsedWord = {};
       let heatmapData = [];
 
+      // Process 'tx' and 'pretty' files differently
       if (fileType === 'tx') {
-        // Handle 'tx' files
         const utterances = content.utterances || [];
-        const duration = utterances.length ? 
-          Math.max(...utterances.map(u => u.end_time)) - Math.min(...utterances.map(u => u.start_time))
-          : 0;
-        const speakers = new Set(utterances.map(u => u.speaker));
-        const totalUtterances = utterances.length;
-        const totalWords = utterances.reduce((sum, u) => sum + u.text.split(/\s+/).length, 0);
-
-        contentMetadata = {
-          duration,
-          speakerInfo: Array.from(speakers),
-          totalUtterances,
-          totalWords
-        };
-
-        // Extract top words and generate heatmap data
-        speakerTopWords = extractTopWordsBySpeaker(content);
-        heatmapData = generateHeatmapData(utterances, speakerTopWords);
-
+        contentMetadata = calculateDurations(utterances);
+        const topWordsData = extractTopWordsBySpeaker(content);
+        speakerTopWords = topWordsData.speakerTopWords;
+        speakerMostUsedWord = topWordsData.speakerMostUsedWord;
+        heatmapData = generateHeatmapData(utterances, speakerTopWords, speakerMostUsedWord);
       } else if (fileType === 'pretty') {
-        // Handle 'pretty' files
         contentMetadata = {
           duration: content.audio_duration || 0,
           speakerInfo: Array.from(new Set((content.words || []).map(word => word.speaker))),
@@ -252,21 +258,21 @@ const updateFileList = () => {
           entities: content.entities || [],
           autoHighlights: content.highLights || []
         };
-
-        // Extract top words and generate heatmap data
+        const topWordsData = extractTopWordsBySpeaker(content);
         speakerTopWords = extractTopWordsBySpeaker(content);
-        heatmapData = generateHeatmapData(content.utterances || [], speakerTopWords);
+        speakerMostUsedWord = topWordsData.speakerMostUsedWord;
+        heatmapData = generateHeatmapData(content.utterances || [], speakerTopWords, speakerMostUsedWord);
       }
 
       return {
         ...fileMetadata,
         ...contentMetadata,
-        topWords: speakerTopWords, // Include topWords in the output
-        heatmapData: heatmapData // Include heatmap data if necessary
-      }
+        topWords: speakerTopWords,
+        heatmapData: heatmapData
+      };
     });
 
-    // Write the updated file list to fileList.json, overwriting the file each time
+    // Write the aggregated data to fileList.json
     fs.writeFileSync(filePath, JSON.stringify(fileList, null, 2));
     console.log('fileList.json has been updated successfully.');
   } catch (error) {
@@ -274,5 +280,6 @@ const updateFileList = () => {
   }
 };
 
-// Execute the function
+// Execute the update function
 updateFileList();
+createFileIndex();
