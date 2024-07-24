@@ -14,7 +14,9 @@ export const colorShades = {
   },
   silenceColor: '#808080',  // Grey
   overlapColor: '#d50000',  // Cardinal red
-  unknownSpeakerColor: '#b0b0b0'  // Neutral grey for unknown speakers
+  unknownSpeakerColor: '#b0b0b0',  // Neutral grey for unknown speakers
+  confidenceScale: d3.scaleLinear().domain([0, 1]).range(['#ffe0b2', '#e65100']), // Light to dark orange
+  sentimentScale: d3.scaleOrdinal().domain(['POSITIVE', 'NEUTRAL', 'NEGATIVE']).range(['#1f77b4', '#ff7f0e', '#2ca02c']), // Blue, Orange, Green
 };
 
 /**
@@ -23,6 +25,8 @@ export const colorShades = {
  * @param {boolean} cell.isOverlap - Indicates if the cell represents an overlap.
  * @param {string} [cell.speaker] - The speaker identifier.
  * @param {number} [cell.percentile] - The percentile for color scaling.
+ * @param {number} [cell.confidenceScore] - The confidence score for color scaling.
+ * @param {string} [cell.sentimentLabel] - The sentiment label for color scaling.
  * @returns {string} - The color to be applied to the cell.
  */
 export const getColorForCell = (cell) => {
@@ -39,6 +43,22 @@ export const getColorForCell = (cell) => {
     if (cell.speaker === 'silence') {
         console.log('Silence color:', colorShades.silenceColor);
         return colorShades.silenceColor;
+    }
+
+    // Handle confidence-based coloring
+    if (cell.confidenceScore !== undefined) {
+      const confidenceColor = colorShades.confidenceScale(cell.confidenceScore);
+      console.log('Confidence color:', confidenceColor);
+      return confidenceColor;
+
+    }
+
+    // Handle sentiment-based coloring
+    if (cell.sentimentLabel !== undefined) {
+      const sentimentColor = colorShades.sentimentScale(cell.sentimentLabel);
+      console.log('Sentiment color:', sentimentColor);
+      return sentimentColor;
+
     }
 
     // Handle unknown or invalid speakers
@@ -60,6 +80,18 @@ export const getColorForCell = (cell) => {
     console.log('Calculated color:', color);
     return color;
 };
+export const getColorForConfidence = (confidenceScore) => {
+  const color = colorShades.confidenceScale(confidenceScore);
+  console.log('Confidence color:', color);
+  return color;
+};
+
+export const getColorForSentiment = (sentimentLabel) => {
+  const color = colorShades.sentimentScale(sentimentLabel);
+  console.log('Sentiment color:', color);
+  return color;
+};
+
 
 
 // Future ideas for possible implementation:

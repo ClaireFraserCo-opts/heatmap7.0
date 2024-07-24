@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from 'd3';
-import { getColorForCell } from '../utils/colorShades'; // Make sure this function exists and is correct
+import { getColorForCell } from '../utils/colorShades';
 
 const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
   useEffect(() => {
@@ -9,7 +9,7 @@ const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
       .attr('width', '100%')
       .attr('height', '100%');
 
-    svg.selectAll('*').remove(); // Clear previous content
+    svg.selectAll('*').remove();
 
     svg.selectAll('rect')
       .data(data)
@@ -20,7 +20,7 @@ const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
       .attr('height', cellHeight)
       .attr('rx', 5)
       .attr('ry', 5)
-      .style('fill', d => getColorForCell(d)) // Apply color based on cell data
+      .style('fill', d => getColorForCell(d))
       .style('opacity', 0.6)
       .style('stroke', d => d.isOverlap ? 'black' : 'none')
       .style('stroke-width', d => d.isOverlap ? 1 : 0)
@@ -32,26 +32,21 @@ const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
           y: event.pageY
         });
       })
-      .on('mouseout', () => {
-        setTooltip({ visible: false, content: '', x: 0, y: 0 });
-      })
+      .on('mouseout', () => setTooltip({ visible: false, content: '', x: 0, y: 0 }))
       .on('click', (event, d) => {
         if (d.wordFrequency === 'X') {
           // Handle single click to open a summary widget
-          // Your custom logic here
         }
       })
       .on('dblclick', (event, d) => {
         if (d.wordFrequency === 'X') {
           // Handle double click to send a message to the container
-          // Your custom logic here
         }
       });
   }, [data, cellWidth, cellHeight, setTooltip]);
 
   return (
     <svg id="heatmapGrid" className="heatmap-grid" style={{ width: '100%', height: '100%' }}>
-      {/* The grid will be rendered using D3.js */}
     </svg>
   );
 };
@@ -65,7 +60,7 @@ Grid.propTypes = {
     percentile: PropTypes.number,
     speaker: PropTypes.string.isRequired,
     isOverlap: PropTypes.bool,
-    wordFrequency: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Added to handle wordFrequency type
+    wordFrequency: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   })).isRequired,
   cellWidth: PropTypes.number.isRequired,
   cellHeight: PropTypes.number.isRequired,

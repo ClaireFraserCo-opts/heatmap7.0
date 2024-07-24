@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import HeatmapComponent from './components/HeatmapComponent';
+import TopWordsList from './components/TopWordsList';
 
 function App() {
   const [fileList, setFileList] = useState([]);
@@ -55,9 +56,12 @@ function App() {
       {/* Display error messages */}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      {/* Display the heatmap if fileContent is valid */}
-      {fileContent && fileContent.length > 0 ? (
-        <HeatmapComponent data={fileContent} />
+   {/* Display the heatmap if fileContent is valid */}
+   {fileContent && fileContent.length > 0 ? (
+        <>
+          <HeatmapComponent data={fileContent} />
+          <TopWordsList data={fileContent} /> {/* Adding the TopWordsList component */}
+        </>
       ) : fileContent ? (
         <div>No data available for the selected file.</div>
       ) : null}
