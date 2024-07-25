@@ -8,19 +8,17 @@
   pointer-events: none;
 }
 
-/* Add styles for the dropdown menu */
-select {
-  color: black; /* Ensure the text color is black or any other color that contrasts with the background */
-  background-color: white; /* Ensure the background color is white or any other color that contrasts with the text */
-  border: 1px solid #ccc; /* Optional: Add a border for better visibility */
-  padding: 5px; /* Optional: Add some padding */
-  font-size: 16px; /* Optional: Adjust font size */
+.App-content {
+  margin: 20px;
+}
+
+.file-selector {
+  margin: 10px;
 }
 
 option {
   color: black; /* Ensure the text color is black or any other color that contrasts with the background */
 }
-
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
@@ -30,12 +28,12 @@ option {
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 10vh; /* Reduce the minimum height */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: calc(8px + 1.5vmin); /* Adjust the font size */
   color: white;
 }
 
@@ -51,6 +49,10 @@ option {
 select:disabled {
   background-color: #f0f0f0;
   cursor: not-allowed;
+}
+
+.heatmap {
+  margin: 20px;
 }
 
 @keyframes App-logo-spin {

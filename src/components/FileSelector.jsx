@@ -3,12 +3,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 
-/**
- * FileSelector component allows users to select a file from a list.
- * @param {Object} props - Component props.
- * @param {Function} props.onFileSelect - Callback function when a file is selected.
- * @returns {JSX.Element} - Rendered component.
- */
 const FileSelector = ({ onFileSelect }) => {
   const [fileList, setFileList] = useState([]);
   const [loading, setLoading] = useState(true);

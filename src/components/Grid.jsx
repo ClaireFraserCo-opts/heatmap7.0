@@ -1,13 +1,57 @@
-import React, { useEffect } from 'react';
+// src/components/Grid.jsx
+
+import React, { useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from 'd3';
-import { getColorForCell } from '../utils/colorShades';
+import { getColorForUtterance } from '../utils/colorShades';
 
-const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
+/**
+ * Grid component renders a heatmap grid using D3.js.
+ * @param {Object} props - Component props.
+ * @param {Array} props.data - Data to be visualized in the grid.
+ * @param {number} props.cellWidth - Width of each cell in the grid.
+ * @param {number} props.cellHeight - Height of each cell in the grid.
+ * @param {Function} props.setTooltip - Function to set the tooltip visibility and content.
+ * @returns {JSX.Element} - Rendered component.
+ */
+const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
+  const svgRef = useRef(null);
+
+  // Handle mouse over event to show tooltip
+  const handleMouseOver = useCallback((event, d) => {
+    setTooltip({
+      visible: true,
+      content: `Speaker: ${d.speaker || 'N/A'}, Confidence: ${d.confidence || 'N/A'}, Sentiment: ${d.sentiment || 'N/A'}, Percentile: ${d.percentile || 'N/A'}`,
+      x: event.pageX,
+      y: event.pageY
+    });
+  }, [setTooltip]);
+
+  // Handle mouse out event to hide tooltip
+  const handleMouseOut = useCallback(() => {
+    setTooltip({ visible: false, content: '', x: 0, y: 0 });
+  }, [setTooltip]);
+
+  // Handle click event
+  const handleClick = useCallback((event, d) => {
+    if (d.wordFrequency === 'X') {
+      // Handle single click to open a summary widget
+      console.log('Single click on:', d);
+    }
+  }, []);
+
+  // Handle double click event
+  const handleDblClick = useCallback((event, d) => {
+    if (d.wordFrequency === 'X') {
+      // Handle double click to send a message to the container
+      console.log('Double click on:', d);
+    }
+  }, []);
+
   useEffect(() => {
-    const svg = d3.select('#heatmapGrid')
-      .attr('width', '100%')
-      .attr('height', '100%');
+    const svg = d3.select(svgRef.current)
+      .attr('width', containerSize.width)
+      .attr('height', containerSize.height);
 
     svg.selectAll('*').remove();
 
@@ -20,33 +64,18 @@ const Grid = ({ data, cellWidth, cellHeight, setTooltip }) => {
       .attr('height', cellHeight)
       .attr('rx', 5)
       .attr('ry', 5)
-      .style('fill', d => getColorForCell(d))
+      .style('fill', d => getColorForUtterance(d)) // Use the updated color function
       .style('opacity', 0.6)
       .style('stroke', d => d.isOverlap ? 'black' : 'none')
       .style('stroke-width', d => d.isOverlap ? 1 : 0)
-      .on('mouseover', (event, d) => {
-        setTooltip({
-          visible: true,
-          content: `Speaker: ${d.speaker || 'N/A'}, Confidence: ${d.confidence || 'N/A'}, Sentiment: ${d.sentiment || 'N/A'}, Percentile: ${d.percentile || 'N/A'}`,
-          x: event.pageX,
-          y: event.pageY
-        });
-      })
-      .on('mouseout', () => setTooltip({ visible: false, content: '', x: 0, y: 0 }))
-      .on('click', (event, d) => {
-        if (d.wordFrequency === 'X') {
-          // Handle single click to open a summary widget
-        }
-      })
-      .on('dblclick', (event, d) => {
-        if (d.wordFrequency === 'X') {
-          // Handle double click to send a message to the container
-        }
-      });
-  }, [data, cellWidth, cellHeight, setTooltip]);
+      .on('mouseover', handleMouseOver)
+      .on('mouseout', handleMouseOut)
+      .on('click', handleClick)
+      .on('dblclick', handleDblClick);
+  }, [data, containerSize, cellWidth, cellHeight, handleMouseOver, handleMouseOut, handleClick, handleDblClick]);
 
   return (
-    <svg id="heatmapGrid" className="heatmap-grid" style={{ width: '100%', height: '100%' }}>
+    <svg ref={svgRef} className="heatmap-grid" style={{ width: '100%', height: '100%' }}>
     </svg>
   );
 };
@@ -60,8 +89,13 @@ Grid.propTypes = {
     percentile: PropTypes.number,
     speaker: PropTypes.string.isRequired,
     isOverlap: PropTypes.bool,
+    isSilence: PropTypes.bool,
     wordFrequency: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   })).isRequired,
+  containerSize: PropTypes.shape({
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired
+  }).isRequired,
   cellWidth: PropTypes.number.isRequired,
   cellHeight: PropTypes.number.isRequired,
   setTooltip: PropTypes.func.isRequired,

@@ -1,67 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import HeatmapComponent from '../src/components/HeatmapComponent';
-import TopWordsList from '../src/components/TopWordsList';
-import './App.css';  // Make sure to import your CSS file if needed
+// src/App.js
+import React, { useState } from 'react';
+import HeatmapComponent from './components/HeatmapComponent'; // Ensure this path is correct
+import FileSelector from './components/FileSelector'; // Ensure this path is correct
+import '../src/styles/App.css';
 
+/**
+ * Main App component that handles file selection and data visualization.
+ * @returns {JSX.Element} - Rendered component.
+ */
 function App() {
-  const [fileList, setFileList] = useState([]);
-  const [selectedFile, setSelectedFile] = useState('');
   const [fileContent, setFileContent] = useState(null);
   const [error, setError] = useState(null);
 
-  // Handle file selection change
-  const handleFileChange = async (event) => {
-    const filePath = event.target.value;
-    setSelectedFile(filePath);
-    
+  /**
+   * Handles the file selection and fetches the file data.
+   * @param {string} fileName - The name of the selected file.
+   */
+  const handleFileChange = async (fileName) => {
+    console.log(`Selected file: ${fileName}`); // Debug statement
+
     try {
-      const response = await fetch(`/data/${filePath}`);
+      const response = await fetch(`/data/${fileName}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      setFileContent(data);
-      setError(null);
+      console.log('File Content:', data); // Check data format in console
+
+      // Validate the structure of the data
+      if (data.utterances && Array.isArray(data.utterances)) {
+        setFileContent(data);
+        setError(null);
+      } else {
+        throw new Error('Data is not in the expected format');
+      }
     } catch (error) {
-      setError(error.message);
+      console.error(`Error loading file: ${error.message}`); // Debug statement
+      setError(`Error loading file: ${error.message}`);
       setFileContent(null);
     }
   };
 
-  // Fetch the list of files (assuming fileList.json is in the public/data directory)
-  useEffect(() => {
-    const fetchFileList = async () => {
-      try {
-        const response = await fetch('/data/fileList.json');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setFileList(data);
-      } catch (error) {
-        setError(error.message);
-      }
-    };
-
-    fetchFileList();
-  }, []);
-
   return (
     <div className='App'>
-      <select onChange={handleFileChange} value={selectedFile}>
-        <option value="">Select a file</option>
-        {fileList.map(file => (
-          <option key={file.filePath} value={file.filePath}>{file.fileName}</option>
-        ))}
-      </select>
+      <FileSelector onFileSelect={handleFileChange} />
 
       {error && <div className="error">{error}</div>}
 
-      {fileContent && fileContent.length > 0 ? (
-        <>
-          <HeatmapComponent data={fileContent} />
-          <TopWordsList data={fileContent} />
-        </>
+      {fileContent && fileContent.utterances && fileContent.utterances.length > 0 ? (
+        <HeatmapComponent data={fileContent.utterances} />
       ) : fileContent ? (
         <div>No data available for the selected file.</div>
       ) : null}
