@@ -1,11 +1,26 @@
 .App {
   text-align: center;
+  padding: 20px;
 }
 
 .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
+
+/* Add styles for the dropdown menu */
+select {
+  color: black; /* Ensure the text color is black or any other color that contrasts with the background */
+  background-color: white; /* Ensure the background color is white or any other color that contrasts with the text */
+  border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+  padding: 5px; /* Optional: Add some padding */
+  font-size: 16px; /* Optional: Adjust font size */
+}
+
+option {
+  color: black; /* Ensure the text color is black or any other color that contrasts with the background */
+}
+
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
@@ -26,6 +41,16 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+
+select:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
 }
 
 @keyframes App-logo-spin {

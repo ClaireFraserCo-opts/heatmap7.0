@@ -3,8 +3,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 
+/**
+ * FileSelector component allows users to select a file from a list.
+ * @param {Object} props - Component props.
+ * @param {Function} props.onFileSelect - Callback function when a file is selected.
+ * @returns {JSX.Element} - Rendered component.
+ */
 const FileSelector = ({ onFileSelect }) => {
   const [fileList, setFileList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchFileList = async () => {
@@ -13,15 +21,21 @@ const FileSelector = ({ onFileSelect }) => {
         setFileList(response.data);
       } catch (error) {
         console.error('Error fetching file list:', error);
+        setError('Failed to load file list. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchFileList();
   }, []);
 
+  if (loading) return <p>Loading file list...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <select onChange={(e) => onFileSelect(e.target.value)}>
-      <option value="">Select a file...</option>
+    <select onChange={(e) => onFileSelect(e.target.value)} defaultValue="">
+      <option value="" disabled>Select a file...</option>
       {fileList.map((file) => (
         <option key={file.fileName} value={file.fileName}>
           {file.fileName}

@@ -1,6 +1,6 @@
-// ../utils/heatmapUtils.js
-
-import { colorShades } from './colorShades'; // Adjust the path as necessary
+// heatmapUtils.js
+import { scaleSequential, interpolateViridis } from 'd3';
+import { colorShades } from './colorShades'; // Import custom color definitions
 
 /**
  * Calculates the percentile rank of a value within a dataset.
@@ -28,37 +28,16 @@ export const calculatePercentile = (value = 0, data = []) => {
 /**
  * Gets the color for an utterance based on its properties and dataset.
  * @param {Object} utterance - The utterance data object.
- * @param {Object} data - The dataset containing all utterances.
+ * @param {Array} data - The dataset containing all utterances.
  * @returns {string} - The color for the utterance.
  */
-export const getColorForUtterance = (utterance = {}, data = {}) => {
-  if (!utterance) return colorShades.silenceColor;
-  if (utterance.isOverlap) return colorShades.overlapColor;
-  if (utterance.wordFrequency === undefined || utterance.wordFrequency === 0) return colorShades.silenceColor;
-  
-  const percentile = calculatePercentile(utterance.wordFrequency, data.utterances || []);
-  let shades;
+export const getColorForUtterance = (utterance, data) => {
+  const value = utterance.wordFrequency || 0;
+  const percentile = calculatePercentile(value, data);
 
-  switch (utterance.speaker) {
-    case 'A':
-      shades = colorShades.speakerColors.A.range();
-      break;
-    case 'B':
-      shades = colorShades.speakerColors.B.range();
-      break;
-    case 'C':
-      shades = colorShades.speakerColors.C.range();
-      break;
-    case 'D':
-      shades = colorShades.speakerColors.D.range();
-      break;
-    default:
-      shades = [colorShades.silenceColor]; // Default to silence if speaker type is unknown
-  }
-
-  const index = Math.floor((percentile / 100) * (shades.length - 1));
-  console.log(`Utterance Color: ${shades[index]}`); // Debugging
-  return shades[index];
+  // Use custom color scales from colorShades
+  const colorScale = scaleSequential(interpolateViridis).domain([0, 100]);
+  return colorScale(percentile);
 };
 
 /**
@@ -69,31 +48,31 @@ export const getColorForUtterance = (utterance = {}, data = {}) => {
 export const getColorForWord = (word = {}) => {
   if (!word) return colorShades.silenceColor;
 
-  let shades;
+  let colorScale;
 
   switch (word.speaker) {
     case 'A':
-      shades = colorShades.speakerColors.A.range();
+      colorScale = colorShades.speakerColors.A;
       break;
     case 'B':
-      shades = colorShades.speakerColors.B.range();
+      colorScale = colorShades.speakerColors.B;
       break;
     case 'C':
-      shades = colorShades.speakerColors.C.range();
+      colorScale = colorShades.speakerColors.C;
       break;
     case 'D':
-      shades = colorShades.speakerColors.D.range();
+      colorScale = colorShades.speakerColors.D;
       break;
     default:
-      shades = [colorShades.silenceColor]; // Default to silence if speaker type is unknown
+      colorScale = () => colorShades.unknownSpeakerColor; // Default to unknown speaker color
   }
-  
+
   if (word.isOverlap) return colorShades.overlapColor;
   if (word.confidence === undefined || word.confidence < 0.5) return colorShades.silenceColor;
 
-  const confidenceIndex = Math.floor(word.confidence * (shades.length - 1));
-  console.log(`Word Color: ${shades[confidenceIndex]}`); // Debugging
-  return shades[confidenceIndex];
+  // Use the confidence scale if available
+  const confidenceIndex = Math.floor(word.confidence * (colorScale.range().length - 1));
+  return colorScale(confidenceIndex / (colorScale.range().length - 1));
 };
 
 /**
@@ -101,27 +80,11 @@ export const getColorForWord = (word = {}) => {
  * @param {Array} data - The processed data suitable for heatmap.
  * @returns {Array} - Data formatted for heatmap visualization.
  */
-export function generateHeatmapData(data) {
-  return data.map(item => ({
-      x: item.start, // Adjust based on your heatmap X-axis
-      y: item.confidence, // Adjust based on your heatmap Y-axis
-      label: item.text
+export const generateHeatmapData = (data) => {
+  return data.map((item, index) => ({
+    x: index % 100 * 12, // Adjust based on your heatmap X-axis
+    y: Math.floor(index / 100) * 12, // Adjust based on your heatmap Y-axis
+    color: getColorForUtterance(item, data),
+    ...item
   }));
-}
-
-
-
-// export const getColorForSpeaker = (speaker) => {
-//   switch (speaker) {
-//     case 'A':
-//       return colorShades.speakerA[Math.floor(Math.random() * colorShades.speakerA.length)];
-//     case 'B':
-//       return colorShades.speakerB[Math.floor(Math.random() * colorShades.speakerB.length)];
-//     case 'C':
-//       return colorShades.speakerC[Math.floor(Math.random() * colorShades.speakerC.length)];
-//     case 'D':
-//       return colorShades.speakerD[Math.floor(Math.random() * colorShades.speakerD.length)];
-//     default:
-//       return colorShades.silence;
-//   }
-// };
+};

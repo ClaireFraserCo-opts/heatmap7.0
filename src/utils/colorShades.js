@@ -1,4 +1,6 @@
-// colorShades.js
+// src/utils/colorShades.js
+
+
 import * as d3 from 'd3';
 
 /**
@@ -22,14 +24,14 @@ export const colorShades = {
 /**
  * Determines the color for a cell based on its properties.
  * @param {Object} cell - The data object representing the cell.
- * @param {boolean} cell.isOverlap - Indicates if the cell represents an overlap.
+ * @param {boolean} [cell.isOverlap] - Indicates if the cell represents an overlap.
  * @param {string} [cell.speaker] - The speaker identifier.
  * @param {number} [cell.percentile] - The percentile for color scaling.
  * @param {number} [cell.confidenceScore] - The confidence score for color scaling.
  * @param {string} [cell.sentimentLabel] - The sentiment label for color scaling.
  * @returns {string} - The color to be applied to the cell.
  */
-export const getColorForCell = (cell) => {
+export const getColorForCell = (cell = {}) => {
     // Log the cell object for debugging
     console.log('Cell:', cell);
 
@@ -50,7 +52,6 @@ export const getColorForCell = (cell) => {
       const confidenceColor = colorShades.confidenceScale(cell.confidenceScore);
       console.log('Confidence color:', confidenceColor);
       return confidenceColor;
-
     }
 
     // Handle sentiment-based coloring
@@ -58,7 +59,6 @@ export const getColorForCell = (cell) => {
       const sentimentColor = colorShades.sentimentScale(cell.sentimentLabel);
       console.log('Sentiment color:', sentimentColor);
       return sentimentColor;
-
     }
 
     // Handle unknown or invalid speakers
@@ -80,12 +80,23 @@ export const getColorForCell = (cell) => {
     console.log('Calculated color:', color);
     return color;
 };
+
+/**
+ * Returns the color based on confidence score.
+ * @param {number} confidenceScore - The confidence score.
+ * @returns {string} - The color for the confidence score.
+ */
 export const getColorForConfidence = (confidenceScore) => {
   const color = colorShades.confidenceScale(confidenceScore);
   console.log('Confidence color:', color);
   return color;
 };
 
+/**
+ * Returns the color based on sentiment label.
+ * @param {string} sentimentLabel - The sentiment label ('POSITIVE', 'NEUTRAL', 'NEGATIVE').
+ * @returns {string} - The color for the sentiment label.
+ */
 export const getColorForSentiment = (sentimentLabel) => {
   const color = colorShades.sentimentScale(sentimentLabel);
   console.log('Sentiment color:', color);
@@ -93,6 +104,35 @@ export const getColorForSentiment = (sentimentLabel) => {
 };
 
 
+/**
+ * Returns a color based on the word frequency percentile.
+ * @param {number} percentile - The percentile rank of the word frequency.
+ * @returns {string} - The color for the percentile.
+ */
+export const getColorForPercentile = (percentile) => {
+  if (percentile <= 5) return '#000000'; // Darkest shade for top 5%
+  if (percentile <= 10) return '#333333';
+  if (percentile <= 25) return '#666666';
+  if (percentile <= 50) return '#999999';
+  if (percentile <= 75) return '#CCCCCC';
+  return '#FFFFFF'; // Lightest shade for bottom 5%
+};
+
+/**
+ * Returns a color for the utterance based on its properties.
+ * @param {Object} utterance - The utterance object.
+ * @returns {string} - The color for the utterance.
+ */
+export const getColorForUtterance = (utterance) => {
+  if (!utterance) return '#FFFFFF'; // Default color
+
+  if (utterance.isOverlap) return '#DC143C'; // Cardinal red for overlap
+  if (utterance.isSilence) return '#D3D3D3'; // Light grey for silence
+
+  // Calculate percentile if word frequency is defined
+  const percentile = utterance.percentile || 100; // Default to highest percentile if not defined
+  return getColorForPercentile(percentile);
+};
 
 // Future ideas for possible implementation:
 
@@ -103,4 +143,3 @@ export const getColorForSentiment = (sentimentLabel) => {
 //   sentimentScale: d3.scaleOrdinal()
 //     .domain(['POSITIVE', 'NEUTRAL', 'NEGATIVE'])
 //     .range(['#2ca02c', '#d3d3d3', '#d62728']), // Green, Gray, Red
-

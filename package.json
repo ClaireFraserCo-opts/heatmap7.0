@@ -26,7 +26,8 @@
     "react-tooltip": "^5.27.1",
     "redux": "^5.0.1",
     "styled-components": "^6.1.12",
-    "web-vitals": "^4.2.2"
+    "web-vitals": "^4.2.2",
+    "yargs": "^17.7.2"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -12,7 +12,11 @@ export default [
       },
       globals: {
         ...globals.browser,
-        h337: 'readonly' // Add h337 as a global variable
+        h337: 'readonly', // Add h337 as a global variable
+        process: 'readonly', // Add process as a global variable
+      },
+      env: {
+        node: true, // Enable Node.js global variables
       },
     },
   },
