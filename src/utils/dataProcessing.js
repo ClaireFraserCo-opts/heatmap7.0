@@ -200,6 +200,14 @@ export const calculateWordFrequencies = (utterances) => {
  * @param {number} duration - Duration of the heatmap in seconds.
  * @returns {Array} - Array of initialized grid data objects.
  */
+/**
+ * Initializes the heatmap grid data based on provided utterances.
+ * @param {Array} data - Array of processed heatmap data objects.
+ * @param {number} cellWidth - Width of each grid cell.
+ * @param {number} cellHeight - Height of each grid cell.
+ * @param {number} duration - Duration of the heatmap in seconds.
+ * @returns {Array} - Array of initialized grid data objects.
+ */
 export const initializeGrid = (data, cellWidth, cellHeight, duration) => {
   const grid = [];
   const numCellsX = Math.floor(window.innerWidth * 0.8 / cellWidth);
@@ -209,7 +217,7 @@ export const initializeGrid = (data, cellWidth, cellHeight, duration) => {
     const item = data[i % data.length] || {};
     grid.push({
       ...item,
-      x: (i % numCellsX) * cellWidth,
+      x: (i % numCellsX) * (duration / numCellsX),
       y: Math.floor(i / numCellsX) * cellHeight,
       width: cellWidth,
       height: cellHeight,
@@ -219,3 +227,4 @@ export const initializeGrid = (data, cellWidth, cellHeight, duration) => {
   console.log('Initialized grid data:', grid);
   return grid;
 };
+

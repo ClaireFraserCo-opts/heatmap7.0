@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import HeatmapComponent from './components/HeatmapComponent'; // Ensure this path is correct
 import FileSelector from './components/FileSelector'; // Ensure this path is correct
-import '../src/styles/App.css';
+import './App.css';
 
 /**
  * Main App component that handles file selection and data visualization.

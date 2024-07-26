@@ -53,8 +53,10 @@ const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
       .attr('width', containerSize.width)
       .attr('height', containerSize.height);
 
+    // Remove existing elements
     svg.selectAll('*').remove();
 
+    // Bind data to rectangles
     svg.selectAll('rect')
       .data(data)
       .enter().append('rect')
@@ -64,7 +66,12 @@ const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
       .attr('height', cellHeight)
       .attr('rx', 5)
       .attr('ry', 5)
-      .style('fill', d => getColorForUtterance(d)) // Use the updated color function
+      .style('fill', d => {
+        const color = getColorForUtterance(d);
+        console.log("Cell data:", d);  // Debug statement
+        console.log("Calculated color:", color);  // Debug statement
+        return color;
+      })
       .style('opacity', 0.6)
       .style('stroke', d => d.isOverlap ? 'black' : 'none')
       .style('stroke-width', d => d.isOverlap ? 1 : 0)
@@ -72,7 +79,8 @@ const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
       .on('mouseout', handleMouseOut)
       .on('click', handleClick)
       .on('dblclick', handleDblClick);
-  }, [data, containerSize, cellWidth, cellHeight, handleMouseOver, handleMouseOut, handleClick, handleDblClick]);
+}, [data, containerSize, cellWidth, cellHeight, handleMouseOver, handleMouseOut, handleClick, handleDblClick]);
+
 
   return (
     <svg ref={svgRef} className="heatmap-grid" style={{ width: '100%', height: '100%' }}>
