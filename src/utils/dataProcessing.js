@@ -16,18 +16,18 @@ function processJsonData(jsonData) {
     let config = { summaryLength: 500, frequentWords: 10, persona: 'patient' };
 
     if (jsonData.utterances && jsonData.words) {
-        // Type 1 JSON format
+        // Type 1 JSON format (tx files)
         sessionData.utterances = jsonData.utterances;
         wordFrequencies = jsonData.words;
-    } else if (jsonData.utterances && jsonData.auto_highlights_result) {
-        // Type 2 JSON format
+    } else if (jsonData.utterances && jsonData.summary) {
+        // Type 2 JSON format (pretty files)
         sessionData.utterances = jsonData.utterances;
-        wordFrequencies = jsonData.auto_highlights_result.results.map(result => ({
-            text: result.text,
-            start: result.timestamps[0].start,
-            end: result.timestamps[0].end,
-            confidence: null,
-            speaker: null
+        wordFrequencies = jsonData.words.map(word => ({
+            text: word.text,
+            start: word.start,
+            end: word.end,
+            confidence: word.confidence,
+            speaker: word.speaker,
         }));
     } else {
         throw new Error('Unknown JSON format');
@@ -55,27 +55,26 @@ export function processUtterances(utterances) {
  * @returns {Array} - Top 25 words by frequency.
  */
 export function calculateWordFrequencies(utterances) {
-  const wordFrequencyMap = {};
+    const wordFrequencyMap = {};
 
-  utterances.forEach(utt => {
-      if (utt.text && typeof utt.text === 'string') {
-          const words = utt.text.split(/\s+/); // Split text into words
-          words.forEach(word => {
-              if (word.trim()) { // Check if word is not just whitespace
-                  wordFrequencyMap[word] = (wordFrequencyMap[word] || 0) + 1;
-              }
-          });
-      }
-  });
+    utterances.forEach(utt => {
+        if (utt.text && typeof utt.text === 'string') {
+            const words = utt.text.split(/\s+/);
+            words.forEach(word => {
+                if (word.trim()) {
+                    wordFrequencyMap[word] = (wordFrequencyMap[word] || 0) + 1;
+                }
+            });
+        }
+    });
 
-  const sortedWords = Object.entries(wordFrequencyMap)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 25)
-      .map(([word]) => word);
+    const sortedWords = Object.entries(wordFrequencyMap)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 25)
+        .map(([word]) => word);
 
-  return sortedWords;
+    return sortedWords;
 }
-
 
 /**
  * Prepares heatmap data based on utterances, word frequencies, and durations.
@@ -111,8 +110,6 @@ export async function loadDataForHeatmap() {
         const files = fileList.filter(file => file !== 'fileList.json');
 
         const processedData = await Promise.all(files.map(async (fileName) => {
-            if (fileName === 'fileList.json') return null;
-
             try {
                 const data = await fetchJSON(`/data/${fileName}`);
                 const { sessionData, wordFrequencies } = processJsonData(data);

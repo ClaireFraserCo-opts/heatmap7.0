@@ -4,7 +4,7 @@ import {
   calculateWordFrequencies,
   prepareHeatmapData,
 } from "../utils/dataProcessing";
-import { loadDataForHeatmap as loadDataForHeatmap } from "../utils/fetchData";
+import { loadDataForHeatmap } from "../utils/fetchData";
 import Tooltip from "./Tooltip";
 import Grid from "./Grid";
 import "./../styles/HeatmapComponent.css";
@@ -17,8 +17,6 @@ const goldenRatio = 1.618;
 const cellHeight = Math.round(cellWidth * goldenRatio);
 
 const HeatmapComponent = () => {
-  // State to store raw data
-  const [data, setData] = useState([]);
   // State to store processed heatmap data
   const [heatmapData, setHeatmapData] = useState([]);
   // State to manage tooltip visibility and content
@@ -43,37 +41,42 @@ const HeatmapComponent = () => {
       const loadedData = await loadDataForHeatmap();
       console.log("Loaded data:", loadedData);
 
-      // Validate if the loaded data is an array
       if (!Array.isArray(loadedData)) {
-        console.error('Expected data to be an array, but received:', loadedData);
+        console.error("Expected data to be an array, but received:", loadedData);
         return;
       }
 
-      // Process data to extract utterances
-      const utterances = processUtterances(loadedData);
-      console.log("Processed Utterances:", utterances);
+      // Ensure each item in loadedData is valid
+      const allUtterances = loadedData.flatMap((data, index) => {
+        if (!data || !data.heatmapData) {
+          console.error(`Data at index ${index} is invalid:`, data);
+          return [];
+        }
+        return data.heatmapData.map(item => item.utterance);
+      });
+      console.log("All Utterances:", allUtterances);
 
-      // Ensure that processed utterances is an array
-      if (!Array.isArray(utterances)) {
-        console.error('Expected utterances to be an array, but received:', utterances);
+      if (!Array.isArray(allUtterances)) {
+        console.error("Expected utterances to be an array, but received:", allUtterances);
         return;
       }
 
       // Calculate word frequencies from the utterances
-      const wordFrequencies = calculateWordFrequencies(utterances);
+      const wordFrequencies = calculateWordFrequencies(allUtterances);
       console.log("Calculated Word Frequencies:", wordFrequencies);
 
       // Prepare data for heatmap visualization
-      const processedHeatmapData = prepareHeatmapData(utterances, wordFrequencies);
+      const processedHeatmapData = prepareHeatmapData(allUtterances, wordFrequencies);
       console.log("Processed Heatmap Data:", processedHeatmapData);
 
-      // Calculate the total session duration
-      const totalSessionDurationInSeconds = utterances.length
-        ? utterances[utterances.length - 1].end - utterances[0].start
-        : 0;
-
       // Initialize grid with processed heatmap data and container dimensions
-      const grid = initializeGrid(processedHeatmapData, cellWidth, cellHeight, containerSize.width, containerSize.height);
+      const grid = initializeGrid(
+        processedHeatmapData,
+        cellWidth,
+        cellHeight,
+        containerSize.width,
+        containerSize.height
+      );
       console.log("Initialized Grid Data:", grid);
 
       // Update state with the initialized grid data
@@ -110,7 +113,6 @@ const HeatmapComponent = () => {
 
   // Function to process and generate grid data for rendering
   const processGridData = () => {
-    // Return an empty array if no heatmap data is available
     if (!heatmapData.length) return [];
 
     const { width, height } = containerSize;
@@ -127,28 +129,24 @@ const HeatmapComponent = () => {
     const processedData = new Array(numCellsX * numCellsY)
       .fill(null)
       .map((_, index) => {
-        // Get item data, wrapping around with modulo
         const item = heatmapData[index % heatmapData.length] || {};
         console.log("Processing Cell Index:", index, "Item:", item);
 
-        // Calculate cell coordinates
         const x = (index % numCellsX) * cellWidth + cellWidth / 2;
         const y = Math.floor(index / numCellsX) * cellHeight + cellHeight / 2;
 
-        // Determine color based on utterance data
         const utterance = item.utterance || {};
-        console.log('Utterance in getColorForCell:', utterance);
+        console.log("Utterance in getColorForCell:", utterance);
         const color = getColorForCell(utterance);
         console.log("Cell Color:", color);
 
-        // Return processed cell data
         return {
           ...item,
           x,
           y,
           color,
-          value: utterance.wordFrequency || 0, // Default to 0 if wordFrequency is not defined
-          speaker: utterance.speaker || "", // Default to empty string if speaker is not defined
+          value: utterance.wordFrequency || 0,
+          speaker: utterance.speaker || "",
         };
       });
 
@@ -169,7 +167,6 @@ const HeatmapComponent = () => {
       }}
     >
       <h2>Heatmap</h2>
-      {/* Render the grid with the processed data */}
       <Grid
         data={processedData}
         containerSize={containerSize}
@@ -177,7 +174,6 @@ const HeatmapComponent = () => {
         cellHeight={cellHeight}
         setTooltip={setTooltip}
       />
-      {/* Render the tooltip */}
       <Tooltip
         content={tooltip.content}
         visible={tooltip.visible}
@@ -188,5 +184,4 @@ const HeatmapComponent = () => {
   );
 };
 
-// Remove the unused propTypes since no props are passed to the component.
 export default HeatmapComponent;
