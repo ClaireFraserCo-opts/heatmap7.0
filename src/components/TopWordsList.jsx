@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from '../styles/topWordsList.module.css'; // Adjust the import according to your setup
+import styles from '../styles/topWordsList.module.css'; // Ensure the path is correct
 
 const TopWordsList = React.memo(({ data }) => {
   const topWords = Array.isArray(data.topWords) ? data.topWords : [];

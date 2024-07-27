@@ -1,4 +1,4 @@
-// heatmapUtils.js
+// src/utils/heatmapUtils.js
 import { scaleSequential, interpolateViridis } from 'd3';
 import { colorShades } from './colorShades'; // Import custom color definitions
 

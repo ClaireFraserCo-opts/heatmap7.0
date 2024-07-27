@@ -1,4 +1,5 @@
-// durationUtils.js
+// src/utils/durationUtils.js
+
 /**
  * Converts a time string in HH:MM:SS format to total seconds.
  * @param {string} timeStr - Time in HH:MM:SS format.

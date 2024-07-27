@@ -1,5 +1,3 @@
-// src/components/Grid.jsx
-
 import React, { useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from 'd3';
@@ -32,23 +30,22 @@ const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
     setTooltip({ visible: false, content: '', x: 0, y: 0 });
   }, [setTooltip]);
 
-  // Handle click event
+  // Handle click event (if needed)
   const handleClick = useCallback((event, d) => {
     if (d.wordFrequency === 'X') {
-      // Handle single click to open a summary widget
       console.log('Single click on:', d);
     }
   }, []);
 
-  // Handle double click event
+  // Handle double click event (if needed)
   const handleDblClick = useCallback((event, d) => {
     if (d.wordFrequency === 'X') {
-      // Handle double click to send a message to the container
       console.log('Double click on:', d);
     }
   }, []);
 
-  useEffect(() => {
+  // Function to draw the grid
+  const drawGrid = useCallback(() => {
     const svg = d3.select(svgRef.current)
       .attr('width', containerSize.width)
       .attr('height', containerSize.height);
@@ -79,11 +76,25 @@ const Grid = ({ data, containerSize, cellWidth, cellHeight, setTooltip }) => {
       .on('mouseout', handleMouseOut)
       .on('click', handleClick)
       .on('dblclick', handleDblClick);
-}, [data, containerSize, cellWidth, cellHeight, handleMouseOver, handleMouseOut, handleClick, handleDblClick]);
+  }, [data, containerSize, cellWidth, cellHeight, handleMouseOver, handleMouseOut, handleClick, handleDblClick]);
 
+  useEffect(() => {
+    drawGrid();  // Initial drawing
+
+    // Add resize event listener
+    const handleResize = () => {
+      drawGrid();
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [drawGrid]);
 
   return (
     <svg ref={svgRef} className="heatmap-grid" style={{ width: '100%', height: '100%' }}>
+      {/* The SVG will be updated by D3.js */}
     </svg>
   );
 };

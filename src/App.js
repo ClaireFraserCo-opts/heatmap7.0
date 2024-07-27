@@ -1,7 +1,7 @@
-// src/App.js
 import React, { useState } from 'react';
-import HeatmapComponent from './components/HeatmapComponent'; // Ensure this path is correct
-import FileSelector from './components/FileSelector'; // Ensure this path is correct
+import HeatmapContainer from './components/HeatmapContainer';
+import HeatmapComponent from './components/HeatmapComponent';
+import FileSelector from './components/FileSelector';
 import './App.css';
 
 /**
@@ -17,7 +17,7 @@ function App() {
    * @param {string} fileName - The name of the selected file.
    */
   const handleFileChange = async (fileName) => {
-    console.log(`Selected file: ${fileName}`); // Debug statement
+    console.log(`Selected file: ${fileName}`);
 
     try {
       const response = await fetch(`/data/${fileName}`);
@@ -25,7 +25,7 @@ function App() {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      console.log('File Content:', data); // Check data format in console
+      console.log('File Content:', data);
 
       // Validate the structure of the data
       if (data.utterances && Array.isArray(data.utterances)) {
@@ -35,7 +35,7 @@ function App() {
         throw new Error('Data is not in the expected format');
       }
     } catch (error) {
-      console.error(`Error loading file: ${error.message}`); // Debug statement
+      console.error(`Error loading file: ${error.message}`);
       setError(`Error loading file: ${error.message}`);
       setFileContent(null);
     }
@@ -43,6 +43,7 @@ function App() {
 
   return (
     <div className='App'>
+      <HeatmapContainer /> {/* Ensure this component is used appropriately */}
       <FileSelector onFileSelect={handleFileChange} />
 
       {error && <div className="error">{error}</div>}
