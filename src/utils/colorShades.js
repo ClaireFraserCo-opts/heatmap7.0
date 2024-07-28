@@ -36,59 +36,59 @@ export const colorShades = {
  */
 export const getColorForCell = (cell = {}) => {
   // Log the cell object for debugging
-  console.log("Cell:", cell);
+  // console.log("Cell:", cell);
 
   // Check if the cell represents an overlap
   if (cell.isOverlap) {
-    console.log("Overlap color:", colorShades.overlapColor);
+    // console.log("Overlap color:", colorShades.overlapColor);
     return colorShades.overlapColor;
   }
 
   // Check if the cell represents silence
   if (cell.speaker === "silence") {
-    console.log("Silence color:", colorShades.silenceColor);
+    // console.log("Silence color:", colorShades.silenceColor);
     return colorShades.silenceColor;
   }
 
   // Handle confidence-based coloring
   if (cell.confidenceScore !== undefined) {
     const confidenceColor = colorShades.confidenceScale(cell.confidenceScore);
-    console.log("Confidence color:", confidenceColor);
+    // console.log("Confidence color:", confidenceColor);
     return confidenceColor;
   }
 
   // Handle sentiment-based coloring
   if (cell.sentimentLabel !== undefined) {
     const sentimentColor = colorShades.sentimentScale(cell.sentimentLabel);
-    console.log("Sentiment color:", sentimentColor);
+    // console.log("Sentiment color:", sentimentColor);
     return sentimentColor;
   }
 
   // Handle unknown or invalid speakers
   if (!cell.speaker || !colorShades.speakerColors[cell.speaker]) {
-    console.log("Unknown speaker color:", colorShades.unknownSpeakerColor);
+    // console.log("Unknown speaker color:", colorShades.unknownSpeakerColor);
     return colorShades.unknownSpeakerColor;
   }
 
   // Get the color scale for the known speaker
   const colorScale = colorShades.speakerColors[cell.speaker];
-  console.log("Color scale for speaker:", cell.speaker, colorScale);
+  // console.log("Color scale for speaker:", cell.speaker, colorScale);
 
   // Ensure percentile is within the expected range
   const percentile = Math.max(0, Math.min(100, cell.percentile || 100)); // Ensure percentile is within domain
-  console.log("Percentile:", percentile);
+  // console.log("Percentile:", percentile);
 
   // Calculate and return the color based on the percentile
   const color = colorScale(percentile);
-  console.log("Calculated color:", color);
+  // console.log("Calculated color:", color);
   return color;
 };
 
 // Test cases for getColorForCell
-console.log(getColorForCell({ isOverlap: true })); // Should return overlapColor
-console.log(getColorForCell({ speaker: "A", percentile: 50 })); // Should return a color from speakerColors
-console.log(getColorForCell({ confidenceScore: 0.8 })); // Should return a color from confidenceScale
-console.log(getColorForCell({ sentimentLabel: "POSITIVE" })); // Should return a color from sentimentScale
+// console.log(getColorForCell({ isOverlap: true })); // Should return overlapColor
+// console.log(getColorForCell({ speaker: "A", percentile: 50 })); // Should return a color from speakerColors
+// console.log(getColorForCell({ confidenceScore: 0.8 })); // Should return a color from confidenceScale
+// console.log(getColorForCell({ sentimentLabel: "POSITIVE" })); // Should return a color from sentimentScale
 
 /**
  * Returns the color based on confidence score.
@@ -97,7 +97,7 @@ console.log(getColorForCell({ sentimentLabel: "POSITIVE" })); // Should return a
  */
 export const getColorForConfidence = (confidenceScore) => {
   const color = colorShades.confidenceScale(confidenceScore);
-  console.log("Confidence color:", color);
+  // console.log("Confidence color:", color);
   return color;
 };
 
@@ -108,7 +108,7 @@ export const getColorForConfidence = (confidenceScore) => {
  */
 export const getColorForSentiment = (sentimentLabel) => {
   const color = colorShades.sentimentScale(sentimentLabel);
-  console.log("Sentiment color:", color);
+  // console.log("Sentiment color:", color);
   return color;
 };
 
@@ -131,16 +131,33 @@ export const getColorForPercentile = (percentile) => {
  * @param {Object} utterance - The utterance object.
  * @returns {string} - The color for the utterance.
  */
-export const getColorForUtterance = (utterance) => {
-  if (!utterance) return "#FFFFFF"; // Default color
-
-  if (utterance.isOverlap) return "#DC143C"; // Cardinal red for overlap
-  if (utterance.isSilence) return "#D3D3D3"; // Light grey for silence
-
-  // Calculate percentile if word frequency is defined
-  const percentile = utterance.percentile || 100; // Default to highest percentile if not defined
-  return getColorForPercentile(percentile);
+// src/utils/colorShades.js
+export const getColorForUtterance = (data) => {
+  // Example logic to determine color based on speaker or other properties
+  if (!data.speaker) return '#b0b0b0'; // Default color for unknown speakers
+  
+  // Logic for known speakers
+  const colors = {
+    'Speaker A': '#ff9999',
+    'Speaker B': '#99ff99',
+    'Speaker C': '#9999ff'
+  };
+  
+  return colors[data.speaker] || '#b0b0b0'; // Default color for unknown speakers
 };
+
+
+
+// export const getColorForUtterance = (utterance) => {
+//   if (!utterance) return "#FFFFFF"; // Default color
+
+//   if (utterance.isOverlap) return "#DC143C"; // Cardinal red for overlap
+//   if (utterance.isSilence) return "#D3D3D3"; // Light grey for silence
+
+//   // Calculate percentile if word frequency is defined
+//   const percentile = utterance.percentile || 100; // Default to highest percentile if not defined
+//   return getColorForPercentile(percentile);
+// };
 
 // Future ideas for possible implementation:
 

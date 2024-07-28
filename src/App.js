@@ -43,16 +43,18 @@ function App() {
 
   return (
     <div className='App'>
-      <HeatmapContainer /> {/* Ensure this component is used appropriately */}
-      <FileSelector onFileSelect={handleFileChange} />
-
+      <HeatmapContainer /> 
+      
+      {/* Ensure this component is used appropriately */}
+      {/* <FileSelector onFileSelect={handleFileChange} /> */}
+{/* 
       {error && <div className="error">{error}</div>}
 
       {fileContent && fileContent.utterances && fileContent.utterances.length > 0 ? (
         <HeatmapComponent data={fileContent.utterances} />
       ) : fileContent ? (
         <div>No data available for the selected file.</div>
-      ) : null}
+      ) : null} */}
     </div>
   );
 }
