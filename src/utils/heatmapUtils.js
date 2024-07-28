@@ -55,6 +55,7 @@ export const getColorForWord = (word = {}) => {
 
 /**
  * Generates heatmap data from processed JSON data.
+ * Uses pre-calculated percentiles and other properties from the JSON data.
  * @param {Array} data - The processed data suitable for heatmap.
  * @returns {Array} - Data formatted for heatmap visualization.
  */
